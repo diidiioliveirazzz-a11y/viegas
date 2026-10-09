@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String?             @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String?
+  role               String              @default("CLIENT") // CLIENT, BARBER, ADMIN
+  phone              String?
+  hasSubscription    Boolean             @default(false)
+  subscriptionEndsAt DateTime?
+  appointments       Appointment[]
+  reviews            Review[]
+  hairHistory        ClientHairHistory[]
+  notifications      Notification[]
+  loyalty            Loyalty?
+  orders             Order[]
+  waitlists          Waitlist[]
+  subscriptions      Subscription[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model Service {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  duration     Int // em minutos
+  image        String?
+  isActive     Boolean       @default(true)
+  appointments Appointment[]
+  waitlists    Waitlist[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Appointment {
+  id                         String        @id @default(cuid())
+  userId                     String
+  user                       User          @relation(fields: [userId], references: [id])
+  serviceId                  String
+  service                    Service       @relation(fields: [serviceId], references: [id])
+  date                       DateTime
+  startTime                  String
+  endTime                    String
+  status                     String        @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
+  notes                      String?
+  styleRef                   String? // Referência de corte escolhida
+  isSilent                   Boolean       @default(false)
+  musicRequest               String?
+  companionId                String? // Para Duo Booking
+  companionName              String?
+  duoGroupId                 String?
+  loyaltyAwarded             Boolean       @default(false)
+  reviewAvailableAt          DateTime?
+  subscriptionId             String?
+  subscription               Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionCreditRestored Boolean       @default(false)
+  review                     Review?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+}
+
+model BlockedTime {
+  id        String   @id @default(cuid())
+  date      DateTime
+  startTime String
+  endTime   String
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id                String      @id @default(cuid())
+  appointmentId     String      @unique
+  appointment       Appointment @relation(fields: [appointmentId], references: [id])
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  rating            Int
+  comment           String?
+  privateNotes      String? // Feedback privado apenas para o barbeiro
+  topLengthFeedback String?
+  beardLineFeedback String?
+  isPrivate         Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Setting {
+  id              String   @id @default("default")
+  minAdvanceHours Int      @default(8)
+  openTime        String   @default("09:00")
+  closeTime       String   @default("19:00")
+  lunchStart      String   @default("13:00")
+  lunchEnd        String   @default("14:00")
+  barberName      String   @default("Diogo Viegas")
+  shopName        String   @default("Viegas Barber")
+  address         String   @default("Rua Principal, Lisboa")
+  phone           String   @default("+351 912 345 678")
+  updatedAt       DateTime @updatedAt
+}
+
+model HairStyle {
+  id          String   @id @default(cuid())
+  title       String
+  category    String // Low Fade, Mid Fade, High Fade, Taper Fade, Buzz Cut, Textured Crop, Slick Back, Mullet, etc.
+  description String?
+  imageUrl    String
+  likes       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
+model ClientHairHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime @default(now())
+  serviceName String
+  style       String?
+  photoUrl    String
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model Loyalty {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  points    Int      @default(0)
+  visits    Int      @default(0)
+  tier      String   @default("Bronze") // Bronze, Silver, Gold
+  updatedAt DateTime @updatedAt
+}
+
+model Reward {
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  pointsCost  Int
+  isActive    Boolean @default(true)
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int         @default(10)
+  category    String // Ceras, Pomadas, Shampoos, Barba
+  imageUrl    String?
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  total     Float
+  status    String      @default("PENDING") // PENDING, PAID, CANCELLED
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+  price     Float
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   @default("INFO") // BOOKING, CANCELLATION, VACANCY, LOYALTY
+  actionUrl String?
+  dedupeKey String?  @unique
+  createdAt DateTime @default(now())
+}
+
+model Waitlist {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  serviceId      String?
+  service        Service?  @relation(fields: [serviceId], references: [id])
+  date           DateTime
+  timeSlot       String?
+  isDuo          Boolean   @default(false)
+  notified       Boolean   @default(false)
+  offerExpiresAt DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model Subscription {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  plan            String        @default("2 cortes + 2 barbas")
+  price           Float         @default(40)
+  cutsRemaining   Int           @default(2)
+  beardsRemaining Int           @default(2)
+  status          String        @default("PENDING_CASH") // PENDING_CASH, ACTIVE, EXPIRED, CANCELLED
+  startsAt        DateTime?
+  endsAt          DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  appointments    Appointment[]
+}

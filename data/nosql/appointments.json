@@ -1,0 +1,21 @@
+[
+  {
+    "_id": "f6eaa317-d46d-4efc-8886-14d00ea12a7a",
+    "id": "f6eaa317-d46d-4efc-8886-14d00ea12a7a",
+    "user_id": "73827997-ccc2-4d22-b6dc-22b1e8ca0f2e",
+    "service_id": "srv-corte-12",
+    "date": "2026-10-13",
+    "start_time": "09:00",
+    "end_time": "09:30",
+    "status": "CANCELLED",
+    "style_ref": null,
+    "is_silent": true,
+    "music_request": null,
+    "companion_name": null,
+    "duo_group_id": null,
+    "subscription_id": null,
+    "loyalty_awarded": false,
+    "created_at": "2026-10-09T22:38:44.323Z",
+    "updated_at": "2026-10-09T22:39:27.427Z"
+  }
+]

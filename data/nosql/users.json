@@ -1,0 +1,56 @@
+[
+  {
+    "_id": "ba5d4352-bbfc-4c09-92a9-9ed1bfe5bbb9",
+    "id": "ba5d4352-bbfc-4c09-92a9-9ed1bfe5bbb9",
+    "name": "Diogo Viegas",
+    "email": "admin@instagram.user",
+    "password": "$2b$12$/doLSMsIGMhBTszRXEXZIei9YBSXJdj25fO7sLoU3myjqivt0AGUm",
+    "role": "ADMIN",
+    "created_at": "2026-10-09T15:54:07.760Z",
+    "updated_at": "2026-10-09T15:54:07.760Z"
+  },
+  {
+    "_id": "3d5119e7-b117-43a6-9b61-397819e1fee4",
+    "id": "3d5119e7-b117-43a6-9b61-397819e1fee4",
+    "name": "Cliente Teste",
+    "email": "cliente1791561470956@teste.com",
+    "password": "$2b$12$W/anz.jXiTV9s2Zjwl9hse2q3P1Nfi3fFAi2rHl2k7KuiWWLA.ADm",
+    "role": "CLIENT",
+    "has_subscription": false,
+    "created_at": "2026-10-09T15:57:51.571Z",
+    "updated_at": "2026-10-09T15:57:51.577Z"
+  },
+  {
+    "_id": "6a67e810-321b-42c1-a4b7-185ff18901e1",
+    "id": "6a67e810-321b-42c1-a4b7-185ff18901e1",
+    "name": "Diogo Cliente",
+    "email": "test1791561486282@cliente.pt",
+    "password": "$2b$12$mx552uyKCHM5OpW9EZshk.us/WJ8Uc3STVgnS4sfQAZDI1eN6XMBW",
+    "role": "CLIENT",
+    "has_subscription": false,
+    "created_at": "2026-10-09T15:58:06.812Z",
+    "updated_at": "2026-10-09T15:58:06.812Z"
+  },
+  {
+    "_id": "1060ac07-05bb-49cd-b6f2-f3a00f9ae8dc",
+    "id": "1060ac07-05bb-49cd-b6f2-f3a00f9ae8dc",
+    "name": "cscscs",
+    "email": "scscs@instagram.user",
+    "password": "$2b$12$YQL5RPmSU.rCpZKW6m9uf.6sfyJZc1QCj0xQkwSP8iHsG.izc1PSO",
+    "role": "CLIENT",
+    "has_subscription": false,
+    "created_at": "2026-10-09T16:22:48.462Z",
+    "updated_at": "2026-10-09T16:22:48.464Z"
+  },
+  {
+    "_id": "73827997-ccc2-4d22-b6dc-22b1e8ca0f2e",
+    "id": "73827997-ccc2-4d22-b6dc-22b1e8ca0f2e",
+    "name": "dhdhfh",
+    "email": "dhdhdbd@instagram.user",
+    "password": "$2b$12$AfhDvJyuunEnYPAivuwz2e8Cx0d.TbZnJYvN4dfXvHr9U0W5rtGKO",
+    "role": "CLIENT",
+    "has_subscription": false,
+    "created_at": "2026-10-09T22:37:59.883Z",
+    "updated_at": "2026-10-09T22:37:59.883Z"
+  }
+]

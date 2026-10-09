@@ -1,0 +1,14 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: viegas-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: viegas_barber
+    volumes:
+      - viegas_mongo_data:/data/db
+
+volumes:
+  viegas_mongo_data:

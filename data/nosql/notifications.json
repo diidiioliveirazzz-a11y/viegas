@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "c7117906-46cb-433c-89f9-37c49cb746ee",
+    "id": "c7117906-46cb-433c-89f9-37c49cb746ee",
+    "user_id": "73827997-ccc2-4d22-b6dc-22b1e8ca0f2e",
+    "title": "Marcação Confirmada! ✂️",
+    "message": "O teu corte (Corte) está confirmado para 13/10/2026 às 09:00. O Diogo estará à tua espera!",
+    "type": "BOOKING",
+    "action_url": null,
+    "dedupe_key": null,
+    "read": false,
+    "created_at": "2026-10-09T22:38:44.337Z",
+    "updated_at": "2026-10-09T22:38:44.339Z"
+  },
+  {
+    "_id": "f29d507a-da16-4cae-acd1-35845dda685a",
+    "id": "f29d507a-da16-4cae-acd1-35845dda685a",
+    "user_id": "ba5d4352-bbfc-4c09-92a9-9ed1bfe5bbb9",
+    "title": "✂️ Nova Marcação Recebida!",
+    "message": "dhdhfh agendou Corte para 13/10/2026 às 09:00.",
+    "type": "BOOKING",
+    "action_url": "/dashboard?tab=agenda&date=2026-10-13",
+    "dedupe_key": null,
+    "read": false,
+    "created_at": "2026-10-09T22:38:44.346Z",
+    "updated_at": "2026-10-09T22:38:44.346Z"
+  }
+]
