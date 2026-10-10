@@ -752,7 +752,20 @@ const VB = (() => {
             <p class="hero-tag">“Mais que um corte.”</p>
             <p class="hero-description">Atendimento individual, degradês milimétricos e um ambiente desenhado para o teu momento. Sem esperas desnecessárias, com marcação rápida e precisa.</p>
             <a class="brand-button btn" href="/marcar" style="padding:1rem 2rem">MARCAR AGORA</a>
-            <div class="hero-availability"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:#f87171;font-weight:700">Ver vagas livres →</a></div>
+            <div class="flash-drop-container" style="text-align:left;margin-top:1.5rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
+                <div>
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem">
+                    <span style="background:#dc2626;color:#fff;font-size:0.65rem;font-weight:900;letter-spacing:0.1em;padding:0.2rem 0.5rem;border-radius:0.3rem">⚡ FLASH DROP</span>
+                    <span style="font-family:monospace;font-size:0.72rem;color:var(--muted)">EXPIRA EM: <strong style="color:#fff" id="flash-drop-timer">18:42</strong></span>
+                  </div>
+                  <strong style="display:block;font-size:0.95rem;color:#fff;text-transform:uppercase">Vaga Relâmpago Libertada • 1 Cadeira Hoje</strong>
+                  <p style="margin:0.2rem 0 0;font-size:0.75rem;color:var(--muted)">Horário livre de última hora na cadeira do Diogo. Primeiro a confirmar fica com ela.</p>
+                </div>
+                <a href="/marcar" class="brand-button btn" style="font-weight:900;font-size:0.75rem;padding:0.7rem 1.2rem;border-radius:0.75rem;white-space:nowrap">AGARRAR O DROP ⚡</a>
+              </div>
+            </div>
+            <div class="hero-availability" style="margin-top:1rem"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:#f87171;font-weight:700">Ver vagas livres →</a></div>
             <div class="radar-box" style="margin:0.75rem auto 0;max-width:36rem;text-align:left">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
                 <div style="display:flex;align-items:center;gap:0.5rem">
@@ -834,6 +847,38 @@ const VB = (() => {
             </div>` : `<div class="card" style="margin-top:1.5rem;text-align:center;padding:2.5rem"><p class="muted">📸 Galeria em atualização. Fica atento às novidades!</p><a class="brand-button btn" href="/marcar" style="margin-top:.8rem">Marcar Horário</a></div>`}
           </div>
         </section>
+        <section class="section" id="beat-machine-section" style="background:#09090b;border-top:1px solid var(--card-border);text-align:center">
+          <div class="wrap" style="max-width:52rem">
+            <div style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-size:0.7rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;padding:0.35rem 0.85rem;border-radius:999px;margin-bottom:0.75rem">
+              <span>🎧</span> VIEGAS SOUNDBOARD • MPC BEAT MACHINE
+            </div>
+            <h2 class="h2">O BEAT DA CADEIRA</h2>
+            <p class="muted" style="max-width:32rem;margin:0 auto 2rem">Toca nos pads no teu telemóvel e faz o teu próprio beat com o som real das tesouras, máquinas e 808s da barbearia.</p>
+
+            <div class="card" style="background:rgba(18,15,15,0.95);border-color:rgba(255,255,255,0.1);border-radius:1.5rem;padding:1.5rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:1rem;margin-bottom:1rem;border-bottom:1px solid rgba(255,255,255,0.08);flex-wrap:wrap;gap:0.5rem">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="pulse" style="background:#ef4444"></span>
+                  <span style="font-family:monospace;font-size:0.75rem;font-weight:900;color:var(--foreground,#fff)">VIEGAS MPC-808</span>
+                </div>
+                <button id="btn-trap-loop" class="btn" style="background:rgba(255,255,255,0.08);color:#fff;font-size:0.72rem;font-weight:800;padding:0.45rem 0.9rem;border-radius:0.75rem;cursor:pointer">▶ LOOP TRAP 130 BPM</button>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem">
+                <button class="beat-pad" data-sound="scissors"><span style="font-size:2rem">✂️</span><strong style="font-size:0.75rem;font-family:monospace;color:#fff">TESOURA</strong><span style="font-size:0.65rem;color:var(--muted)">[1]</span></button>
+                <button class="beat-pad" data-sound="clipper"><span style="font-size:2rem">⚡</span><strong style="font-size:0.75rem;font-family:monospace;color:#fff">CLIPPER FADE</strong><span style="font-size:0.65rem;color:var(--muted)">[2]</span></button>
+                <button class="beat-pad" data-sound="spray"><span style="font-size:2rem">💨</span><strong style="font-size:0.75rem;font-family:monospace;color:#fff">SPRAY MIST</strong><span style="font-size:0.65rem;color:var(--muted)">[3]</span></button>
+                <button class="beat-pad" data-sound="sub808"><span style="font-size:2rem">🔊</span><strong style="font-size:0.75rem;font-family:monospace;color:#fff">808 SUB BASS</strong><span style="font-size:0.65rem;color:var(--muted)">[4]</span></button>
+                <button class="beat-pad" data-sound="snare"><span style="font-size:2rem">🥁</span><strong style="font-size:0.75rem;font-family:monospace;color:#fff">TRAP SNARE</strong><span style="font-size:0.65rem;color:var(--muted)">[5]</span></button>
+                <button class="beat-pad" data-sound="razor"><span style="font-size:2rem">💈</span><strong style="font-size:0.75rem;font-family:monospace;color:#fff">NAVALHA</strong><span style="font-size:0.65rem;color:var(--muted)">[6]</span></button>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);font-size:0.68rem;color:var(--muted)">
+                <span>✂️ Áudio 100% sintetizado em tempo real</span>
+                <span style="color:#f87171;font-weight:700">100% Som Analógico</span>
+              </div>
+            </div>
+          </div>
+        </section>
         <section class="section">
           <div class="wrap" style="text-align:center">
             <div class="eyebrow">Feedback Verificado</div>
@@ -871,6 +916,225 @@ const VB = (() => {
       i = (i + 1) % els.length;
       els[i].classList.add("is-active");
     }, 6000);
+
+    // Flash Drop Timer
+    let dropMin = 18;
+    let dropSec = 42;
+    const dropTimerEl = document.getElementById("flash-drop-timer");
+    if (dropTimerEl) {
+      setInterval(() => {
+        if (dropSec > 0) {
+          dropSec--;
+        } else if (dropMin > 0) {
+          dropMin--;
+          dropSec = 59;
+        } else {
+          dropMin = 25;
+          dropSec = 0;
+        }
+        dropTimerEl.textContent = `${dropMin.toString().padStart(2, "0")}:${dropSec.toString().padStart(2, "0")}`;
+      }, 1000);
+    }
+
+    // Barber Beat Machine Audio Engine
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtxClass();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function soundScissors() {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      for (let k = 0; k < 2; k++) {
+        const delay = k * 0.055;
+        const bSize = Math.floor(ctx.sampleRate * 0.04);
+        const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let j = 0; j < bSize; j++) d[j] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const filt = ctx.createBiquadFilter();
+        filt.type = "bandpass";
+        filt.frequency.setValueAtTime(3200 + k * 800, t + delay);
+        filt.Q.setValueAtTime(4, t + delay);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.7, t + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.038);
+        src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+        src.start(t + delay);
+      }
+    }
+
+    function soundClipper() {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(115, t);
+      osc.frequency.linearRampToValueAtTime(145, t + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(95, t + 0.35);
+      const filt = ctx.createBiquadFilter();
+      filt.type = "lowpass";
+      filt.frequency.setValueAtTime(800, t);
+      filt.frequency.linearRampToValueAtTime(1600, t + 0.08);
+      filt.frequency.exponentialRampToValueAtTime(500, t + 0.35);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.4, t);
+      gain.gain.linearRampToValueAtTime(0.5, t + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.36);
+    }
+
+    function soundSpray() {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      const bSize = Math.floor(ctx.sampleRate * 0.22);
+      const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let j = 0; j < bSize; j++) d[j] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filt = ctx.createBiquadFilter();
+      filt.type = "highpass";
+      filt.frequency.setValueAtTime(2400, t);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.01, t);
+      gain.gain.linearRampToValueAtTime(0.4, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      src.start(t);
+    }
+
+    function sound808() {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(165, t);
+      osc.frequency.exponentialRampToValueAtTime(42, t + 0.09);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.85, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.56);
+    }
+
+    function soundSnare() {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(220, t);
+      osc.frequency.exponentialRampToValueAtTime(90, t + 0.08);
+      const oscGain = ctx.createGain();
+      oscGain.gain.setValueAtTime(0.5, t);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+      osc.connect(oscGain); oscGain.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.09);
+      const bSize = Math.floor(ctx.sampleRate * 0.15);
+      const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let j = 0; j < bSize; j++) d[j] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filt = ctx.createBiquadFilter();
+      filt.type = "highpass";
+      filt.frequency.setValueAtTime(1400, t);
+      const nGain = ctx.createGain();
+      nGain.gain.setValueAtTime(0.65, t);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      src.connect(filt); filt.connect(nGain); nGain.connect(ctx.destination);
+      src.start(t);
+    }
+
+    function soundRazor() {
+      const ctx = getAudioCtx();
+      const t = ctx.currentTime;
+      const bSize = Math.floor(ctx.sampleRate * 0.14);
+      const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let j = 0; j < bSize; j++) d[j] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filt = ctx.createBiquadFilter();
+      filt.type = "bandpass";
+      filt.frequency.setValueAtTime(1800, t);
+      filt.frequency.linearRampToValueAtTime(2900, t + 0.08);
+      filt.Q.setValueAtTime(6, t);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.01, t);
+      gain.gain.linearRampToValueAtTime(0.5, t + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      src.start(t);
+    }
+
+    const soundMap = {
+      scissors: soundScissors,
+      clipper: soundClipper,
+      spray: soundSpray,
+      sub808: sound808,
+      snare: soundSnare,
+      razor: soundRazor,
+    };
+
+    document.querySelectorAll(".beat-pad").forEach((pad) => {
+      pad.addEventListener("click", () => {
+        if (navigator && navigator.vibrate) navigator.vibrate(25);
+        pad.classList.add("active");
+        setTimeout(() => pad.classList.remove("active"), 150);
+        const s = pad.dataset.sound;
+        if (soundMap[s]) soundMap[s]();
+      });
+    });
+
+    // Trap Beat Loop
+    let trapInterval = null;
+    const loopBtn = document.getElementById("btn-trap-loop");
+    if (loopBtn) {
+      loopBtn.onclick = () => {
+        if (trapInterval) {
+          clearInterval(trapInterval);
+          trapInterval = null;
+          loopBtn.textContent = "▶ LOOP TRAP 130 BPM";
+          loopBtn.style.background = "rgba(255,255,255,0.08)";
+        } else {
+          loopBtn.textContent = "⏹ PARAR BEAT";
+          loopBtn.style.background = "#dc2626";
+          let step = 0;
+          trapInterval = setInterval(() => {
+            const beat16 = step % 16;
+            if (beat16 === 0 || beat16 === 8 || beat16 === 11) sound808();
+            if (beat16 === 4 || beat16 === 12) soundSnare();
+            if (beat16 % 2 === 0 && beat16 !== 4 && beat16 !== 12) {
+              const ctx = getAudioCtx();
+              const t = ctx.currentTime;
+              const bSize = Math.floor(ctx.sampleRate * 0.02);
+              const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+              const d = buf.getChannelData(0);
+              for (let j = 0; j < bSize; j++) d[j] = Math.random() * 2 - 1;
+              const src = ctx.createBufferSource();
+              src.buffer = buf;
+              const filt = ctx.createBiquadFilter();
+              filt.type = "highpass";
+              filt.frequency.setValueAtTime(6000, t);
+              const gain = ctx.createGain();
+              gain.gain.setValueAtTime(0.18, t);
+              gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+              src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+              src.start(t);
+            }
+            step++;
+          }, 115);
+        }
+      };
+    }
   }
 
   async function pageDiogo() {

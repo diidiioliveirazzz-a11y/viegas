@@ -905,3 +905,40 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Flash Drop & Beat Machine Styles */
+.flash-drop-container {
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: linear-gradient(135deg, rgba(69, 10, 10, 0.85) 0%, rgba(9, 9, 11, 0.95) 50%, rgba(69, 10, 10, 0.85) 100%);
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  margin: 1.5rem auto;
+  max-width: 36rem;
+}
+
+.beat-pad {
+  background: rgba(9, 9, 11, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.beat-pad:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-2px);
+}
+.beat-pad:active, .beat-pad.active {
+  background: rgba(239, 68, 68, 0.35);
+  border-color: #ef4444;
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+  transform: scale(0.95);
+}
