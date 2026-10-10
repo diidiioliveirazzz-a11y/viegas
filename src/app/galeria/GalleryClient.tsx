@@ -73,7 +73,7 @@ export default function GalleryClient({ styles }: { styles: HairStyleItem[] }) {
                 <img
                   src={item.imageUrl}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  className="w-full h-full object-cover object-[center_20%] group-hover:scale-105 transition duration-500"
                 />
                 <div
                   className={`absolute top-3 left-3 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold border ${

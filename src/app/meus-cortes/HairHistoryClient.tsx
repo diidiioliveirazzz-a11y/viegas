@@ -91,7 +91,7 @@ export default function HairHistoryClient({ items }: { items: HistoryItem[] }) {
             >
               <div>
                 <div className="h-64 overflow-hidden relative">
-                  <img src={item.photoUrl} alt={item.serviceName} className="w-full h-full object-cover" />
+                  <img src={item.photoUrl} alt={item.serviceName} className="w-full h-full object-cover object-[center_20%]" />
                   <div className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-amber-400 border border-zinc-800">
                     {item.style || item.serviceName}
                   </div>

@@ -94,7 +94,7 @@ export default async function Home() {
                 <img
                   src="/img/diogo-viegas.jpg"
                   alt="Diogo Viegas"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
               </div>
             </div>
@@ -195,7 +195,7 @@ export default async function Home() {
                   <img
                     src={s.imageUrl}
                     alt={s.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    className="w-full h-full object-cover object-[center_20%] group-hover:scale-105 transition duration-500"
                   />
                   <span className="absolute top-3 left-3 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-pink-600 dark:text-sky-400 border border-slate-200 dark:border-zinc-800">
                     {s.category}

@@ -344,7 +344,7 @@ export default function CatalogClient({
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {styles.map((style) => (
               <article key={style.id} className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
-                <img src={style.imageUrl} alt={style.title} className="h-52 w-full object-cover" />
+                <img src={style.imageUrl} alt={style.title} className="h-52 w-full object-cover object-[center_20%]" />
                 <div className="p-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-red-400">{style.category}</p>
                   <h3 className="mt-1 font-bold text-white">{style.title}</h3>
