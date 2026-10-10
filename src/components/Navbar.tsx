@@ -231,7 +231,7 @@ export default function Navbar({ user }: NavbarProps) {
                 isDark ? "hover:bg-zinc-900 hover:text-red-400" : "hover:bg-rose-50 hover:text-red-700"
               }`}
             >
-              <span>🖼️ Galeria de Cortes</span>
+              <span>🖼️ Galeria de Trabalhos</span>
             </Link>
 
             <Link

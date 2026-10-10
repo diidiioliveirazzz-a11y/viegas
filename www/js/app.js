@@ -75,7 +75,7 @@ const VB = (() => {
           ${user ? `<div style="padding:.5rem .7rem;font-size:.85rem;color:var(--muted)">Olá, <strong>${first}</strong></div>` : ""}
           <a href="/diogo">💈 O Diogo Viegas</a>
           <a href="/#servicos">✂️ Serviços & Preços</a>
-          <a href="/galeria">🖼️ Galeria de Cortes</a>
+          <a href="/galeria">🖼️ Galeria de Trabalhos</a>
           <a href="/loja">🛒 Loja de Produtos</a>
           <a href="/fidelizacao">🎁 Cartão de Fidelização</a>
           ${user ? `<a href="/minhas-marcacoes">📅 As Minhas Marcações</a>` : ""}
@@ -781,10 +781,13 @@ const VB = (() => {
         </section>
         <section class="section section-alt">
           <div class="wrap">
-            <div class="row"><div><div class="eyebrow">Galeria</div><h2 class="h2">TRABALHOS DO DIOGO</h2></div><a href="/galeria" style="color:var(--accent);font-weight:700">Ver Galeria Completa →</a></div>
+            <div class="row"><div><div class="eyebrow">Portefólio</div><h2 class="h2">TRABALHOS DO DIOGO</h2></div><a href="/galeria" style="color:var(--accent);font-weight:700">Ver Mais Fotos →</a></div>
             ${data.styles.length ? `<div class="grid-3" style="margin-top:1.5rem">
-              ${data.styles.map((s) => `<article class="card" style="padding:0;overflow:hidden"><div class="thumb"><img src="${s.imageUrl}" alt="${s.title}"><span class="chip">${s.category}</span></div><div style="padding:1rem" class="row"><div><strong>${s.title}</strong><div class="muted">❤️ ${s.likes} clientes curtiram</div></div><a class="brand-button btn" href="/marcar?ref=${encodeURIComponent(s.title)}">Marcar</a></div></article>`).join("")}
-            </div>` : `<div class="card" style="margin-top:1.5rem;text-align:center;padding:2.5rem"><p class="muted">📸 Galeria em atualização com os novos cortes do Diogo Viegas. Fica atento às novidades!</p><a class="brand-button btn" href="/marcar" style="margin-top:.8rem">Marcar Horário</a></div>`}
+              ${data.styles.slice(0, 6).map((s) => `<div class="card" style="padding:0;overflow:hidden"><div class="thumb" style="height:18rem"><img src="${s.imageUrl}" alt="Trabalho Diogo Viegas"></div></div>`).join("")}
+            </div>
+            <div style="text-align:center;margin-top:2.2rem">
+              <a class="brand-button btn" href="/marcar" style="padding:.9rem 2.2rem;font-weight:800;font-size:0.95rem">MARCAR HORÁRIO</a>
+            </div>` : `<div class="card" style="margin-top:1.5rem;text-align:center;padding:2.5rem"><p class="muted">📸 Galeria em atualização. Fica atento às novidades!</p><a class="brand-button btn" href="/marcar" style="margin-top:.8rem">Marcar Horário</a></div>`}
           </div>
         </section>
         <section class="section">
@@ -850,43 +853,30 @@ const VB = (() => {
     document.getElementById("app").innerHTML = `
       ${navHtml()}
       <main class="page-shell wrap section">
-        <div class="eyebrow">Portfolio</div>
-        <h1 class="h2">GALERIA DE CORTES</h1>
+        <div style="text-align:center;max-width:38rem;margin:0 auto 2.5rem">
+          <div class="eyebrow">Portefólio</div>
+          <h1 class="h2">TRABALHOS DO DIOGO</h1>
+          <p class="muted" style="margin-top:.5rem">Registos reais do dia a dia na Viegas Barber. Atendimento personalizado e cortes à medida de cada cliente.</p>
+          <div style="margin-top:1.5rem">
+            <a class="brand-button btn" href="/marcar" style="padding:.8rem 2rem;font-weight:800;font-size:0.95rem">MARCAR HORÁRIO</a>
+          </div>
+        </div>
         ${styles.length ? `<div class="grid-3" id="gallery-grid">
           ${styles.map((s) => `
-            <article class="card" style="padding:0;overflow:hidden">
-              <div class="thumb"><img src="${s.imageUrl}" alt="${s.title}"></div>
-              <div style="padding:1rem" class="row">
-                <div>
-                  <strong>${s.title}</strong>
-                  <div class="muted">${s.category}</div>
-                </div>
-                <div style="display:flex;gap:.5rem;align-items:center">
-                  <button class="btn-ghost btn" data-like="${s.id}" style="padding:.4rem .7rem">❤️ <span id="like-${s.id}">${s.likes}</span></button>
-                  <a class="brand-button btn" href="/marcar?ref=${encodeURIComponent(s.title)}">Quero este</a>
-                </div>
-              </div>
-            </article>`).join("")}
+            <div class="card" style="padding:0;overflow:hidden">
+              <div class="thumb" style="height:20rem"><img src="${s.imageUrl}" alt="Trabalho Diogo Viegas"></div>
+            </div>`).join("")}
+        </div>
+        <div style="text-align:center;margin-top:3rem">
+          <a class="brand-button btn" href="/marcar" style="padding:.9rem 2.5rem;font-weight:800;font-size:1rem">MARCAR HORÁRIO</a>
         </div>` : `
         <div class="card" style="text-align:center;padding:3.5rem 1.5rem">
           <div style="font-size:3.5rem;margin-bottom:1rem">💈</div>
           <h3>Galeria em Atualização</h3>
-          <p class="muted" style="max-width:32rem;margin:0 auto 1.5rem">Estamos a carregar as novas fotografias dos cortes exclusivos do Diogo Viegas. Fica atento às novidades!</p>
+          <p class="muted" style="max-width:32rem;margin:0 auto 1.5rem">Estamos a carregar as novas fotografias dos trabalhos do Diogo Viegas.</p>
           <a class="brand-button btn" href="/marcar">Marcar Horário</a>
         </div>`}
       </main>${footerHtml()}`;
-    document.querySelectorAll("[data-like]").forEach((btn) => {
-      btn.onclick = async () => {
-        const id = btn.dataset.like;
-        try {
-          const res = await api(`/api/gallery/${id}/like`, { method: "POST" });
-          const countEl = document.getElementById(`like-${id}`);
-          if (countEl) countEl.textContent = res.likes;
-        } catch (e) {
-          console.error(e);
-        }
-      };
-    });
   }
 
   async function pageLoja() {

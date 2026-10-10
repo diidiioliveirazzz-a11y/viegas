@@ -18,11 +18,11 @@ export default async function GaleriaPage() {
       <div className="max-w-6xl mx-auto px-6 pt-32 pb-12">
         <div className="mb-10 text-center max-w-2xl mx-auto">
           <div className="inline-block mb-3 px-3.5 py-1.5 rounded-full border border-pink-200 bg-pink-50 text-pink-600 dark:border-sky-400/30 dark:bg-sky-400/10 dark:text-sky-400 text-xs font-bold tracking-widest uppercase transition-colors">
-            Catálogo de Estilos
+            Portefólio
           </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-3">GALERIA DE CORTES</h1>
+          <h1 className="text-4xl md:text-5xl font-black mb-3">TRABALHOS DO DIOGO</h1>
           <p className="text-sm text-slate-600 dark:text-zinc-400">
-            Explora os degradês e técnicas executadas pelo Diogo. Escolhe o teu favorito e agenda logo a tua visita.
+            Registos reais do dia a dia na Viegas Barber. Atendimento personalizado e cortes à medida de cada cliente.
           </p>
         </div>
 

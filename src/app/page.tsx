@@ -173,7 +173,7 @@ export default async function Home() {
           <div className="flex justify-between items-end mb-12">
             <div>
               <span className="text-pink-600 dark:text-sky-400 font-bold text-xs uppercase tracking-widest">
-                Galeria
+                Portefólio
               </span>
               <h2 className="text-3xl md:text-4xl font-black mt-1">TRABALHOS DO DIOGO</h2>
             </div>
@@ -181,7 +181,7 @@ export default async function Home() {
               href="/galeria"
               className="text-sm font-semibold text-pink-600 dark:text-sky-400 hover:underline"
             >
-              Ver Galeria Completa →
+              Ver Mais Fotos →
             </Link>
           </div>
 
@@ -191,30 +191,24 @@ export default async function Home() {
                 key={s.id}
                 className="rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 group shadow-sm"
               >
-                <div className="h-64 overflow-hidden relative">
+                <div className="h-72 overflow-hidden relative">
                   <img
                     src={s.imageUrl}
-                    alt={s.title}
+                    alt="Trabalho Diogo Viegas"
                     className="w-full h-full object-cover object-[center_20%] group-hover:scale-105 transition duration-500"
                   />
-                  <span className="absolute top-3 left-3 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-pink-600 dark:text-sky-400 border border-slate-200 dark:border-zinc-800">
-                    {s.category}
-                  </span>
-                </div>
-                <div className="p-5 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-base">{s.title}</h4>
-                    <p className="text-xs text-slate-500 dark:text-zinc-500">❤️ {s.likes} clientes curtiram</p>
-                  </div>
-                  <Link
-                    href={`/marcar?ref=${encodeURIComponent(s.title)}`}
-                    className="px-3.5 py-1.5 bg-gradient-to-r from-purple-500 via-pink-500 to-sky-400 text-white dark:bg-sky-400 dark:bg-none dark:hover:bg-sky-300 dark:text-zinc-950 text-xs font-bold rounded-lg transition shadow-sm"
-                  >
-                    Marcar
-                  </Link>
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              href="/marcar"
+              className="brand-button inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base shadow-lg transition"
+            >
+              MARCAR HORÁRIO
+            </Link>
           </div>
         </div>
       </section>
