@@ -229,6 +229,46 @@ const VB = (() => {
     playNotificationSound();
   }
 
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  async function registerWebPushSubscription() {
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      const reg = await navigator.serviceWorker.ready;
+      if (!reg || !reg.pushManager) return;
+
+      const res = await fetch("/api/push/vapid-public-key");
+      if (!res.ok) return;
+      const { publicKey } = await res.json();
+      if (!publicKey) return;
+
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+      }
+
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub }),
+      });
+    } catch (err) {
+      console.warn("Registo de Push Subscription:", err);
+    }
+  }
+
   async function requestPushPermission() {
     const isIOS = isIOSDevice();
     const isStandalone = isStandalonePWA();
@@ -270,6 +310,7 @@ const VB = (() => {
         playNotificationSound();
         dismissFloatingBanner(true);
         updateNotificationUI();
+        await registerWebPushSubscription();
       } else if (perm === "denied") {
         updateNotificationUI();
         alert("Notificações recusadas. Podes alterar mais tarde nas definições do teu telefone.");
@@ -1147,13 +1188,13 @@ const VB = (() => {
               </div>
             </div>
 
-            ${state.whatsAppUrl ? `
-              <div style="margin:1.6rem 0">
-                <a class="btn" href="${state.whatsAppUrl}" target="_blank" style="background:#22c55e;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:.6rem;padding:1rem 1.8rem;border-radius:.8rem;font-size:.95rem;text-decoration:none;box-shadow:0 10px 25px rgba(34,197,94,.25)">
-                  💬 Avisar o Diogo por WhatsApp
-                </a>
-                <p class="muted" style="font-size:.78rem;margin-top:.6rem">Notifica o barbeiro de imediato para alinhar detalhes ou referências.</p>
-              </div>` : ""}
+            <div style="margin:1.4rem auto;max-width:26rem;padding:0.9rem 1.1rem;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:0.85rem;display:flex;align-items:center;gap:0.75rem;text-align:left">
+              <span style="font-size:1.4rem">🔔</span>
+              <div style="font-size:0.84rem;color:var(--text);line-height:1.4">
+                <strong>O Diogo já foi notificado!</strong><br>
+                <span class="muted">A marcação entrou diretamente na aplicação do barbeiro.</span>
+              </div>
+            </div>
             
             <div style="display:flex;gap:.8rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap">
               <a class="brand-button btn" href="/minhas-marcacoes">Ver As Minhas Marcações</a>
@@ -1712,7 +1753,7 @@ const VB = (() => {
                 <button class="btn-ghost btn" style="padding:.3rem .6rem;font-size:.85rem;color:#ef4444" data-st="${a.id}:CANCELLED">Cancelar</button>
               </div>` : ""}
             ${a.status === "CANCELLED" ? `
-              <a class="btn-ghost btn" href="https://wa.me/?text=${encodeURIComponent(`⚡ *Viegas Barber - Vaga Flash!*\n\nBoas pessoal! O corte anterior foi cancelado e surgiu uma vaga aberta hoje às ${a.start_time}. Quem quiser vir cortar cabelo ou barba, envie mensagem para reservar!`)}" target="_blank" rel="noopener" style="color:#22c55e;border-color:#22c55e;font-size:.8rem;padding:.3rem .6rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none" title="Divulgar Vaga no WhatsApp">⚡ Divulgar Vaga</a>` : ""}
+              <button class="brand-button btn" data-broadcast="${a.date}:${a.start_time}" style="font-size:.8rem;padding:.3rem .65rem;display:inline-flex;align-items:center;gap:.35rem" title="Avisar clientes registados e quem tem sininho ativado">⚡ Avisar Clientes da Vaga</button>` : ""}
           </td>
         </tr>`).join("")}</table>`;
     } else if (tab === "clientes") {
@@ -1907,6 +1948,26 @@ const VB = (() => {
         pageDashboard();
       };
     });
+    document.querySelectorAll("[data-broadcast]").forEach((b) => {
+      b.onclick = async () => {
+        const [date, time] = b.dataset.broadcast.split(":");
+        if (!confirm(`Desejas notificar todos os clientes registados e utilizadores com sininho ativado para a vaga das ${time} de ${date}?`)) return;
+        b.disabled = true;
+        b.textContent = "A enviar avisos...";
+        try {
+          const res = await api("/api/admin/broadcast-slot", {
+            method: "POST",
+            body: { date, time },
+          });
+          alert(`⚡ Notificações enviadas com sucesso para ${res.notifiedCount || "todos os"} clientes!`);
+        } catch (err) {
+          alert("Erro ao divulgar vaga: " + (err.message || "Tenta novamente"));
+        } finally {
+          b.disabled = false;
+          b.textContent = "⚡ Avisar Clientes da Vaga";
+        }
+      };
+    });
     document.querySelectorAll("[data-or]").forEach((b) => {
       b.onclick = async () => {
         const [id, status] = b.dataset.or.split(":");
@@ -1990,7 +2051,7 @@ const VB = (() => {
 
   async function boot(page) {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js?v=18").then((reg) => {
+      navigator.serviceWorker.register("/sw.js?v=19").then((reg) => {
         reg.update();
       }).catch(() => {});
     }
@@ -1999,6 +2060,9 @@ const VB = (() => {
       user = (await api("/api/me")).user;
     } catch {
       user = null;
+    }
+    if ("Notification" in window && Notification.permission === "granted") {
+      registerWebPushSubscription();
     }
     if (user) {
       startNotificationPoller();

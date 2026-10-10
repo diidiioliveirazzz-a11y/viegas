@@ -28,6 +28,13 @@ const {
   formatOrderAcceptedNotification,
 } = require("./lib");
 const { sendWhatsAppMessage } = require("./whatsapp");
+const webpush = require("web-push");
+
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "BEvtzUzhSofKx53OVg2gTvRYsdm_5E_xuUYB0VsoHedPcWBVVi13jgCenuiZU4NdXsDudtp9UH691RhiHCMuM3Q";
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "movji9uI68Tl1U1NKDbtTPRiQwTFgxCkSMkBCAc2SWY";
+const VAPID_EMAIL = process.env.VAPID_EMAIL || "mailto:suporte@viegasbarber.pt";
+
+webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
 const app = express();
 const SESSION_MAX_AGE = 365 * 24 * 60 * 60 * 1000;
@@ -93,6 +100,44 @@ async function userVisits(userId) {
   return loyalty?.visits || 0;
 }
 
+async function sendPushToUser(userId, payload) {
+  try {
+    const subs = await db.push_subscriptions().find({ user_id: userId }).toArray();
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification(sub.subscription, JSON.stringify(payload));
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          // Subscription expired or unregistered by browser
+          await db.push_subscriptions().deleteOne({ id: sub.id });
+        } else {
+          console.error("Erro ao enviar push:", err.message);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao procurar subscrições de push:", error.message);
+  }
+}
+
+async function broadcastPush(payload, excludeUserId = null) {
+  try {
+    const filter = excludeUserId ? { user_id: { $ne: excludeUserId } } : {};
+    const subs = await db.push_subscriptions().find(filter).toArray();
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification(sub.subscription, JSON.stringify(payload));
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await db.push_subscriptions().deleteOne({ id: sub.id });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao enviar broadcast push:", error.message);
+  }
+}
+
 async function notify(userId, title, message, type = "INFO", actionUrl = null, dedupeKey = null) {
   try {
     if (dedupeKey) {
@@ -109,6 +154,15 @@ async function notify(userId, title, message, type = "INFO", actionUrl = null, d
       dedupe_key: dedupeKey,
       read: false,
       created_at: new Date().toISOString(),
+    });
+
+    // Enviar notificação Web Push direta (mesmo com PWA fechada ou ecrã bloqueado)
+    await sendPushToUser(userId, {
+      title,
+      message,
+      body: message,
+      url: actionUrl || "/",
+      type,
     });
   } catch (error) {
     console.error("Erro ao criar notificação:", error.message);
@@ -904,6 +958,93 @@ app.get("/api/notifications/unread", requireAuth, async (req, res) => {
 app.post("/api/notifications/read", requireAuth, async (req, res) => {
   await db.notifications().updateMany({ user_id: req.session.user.id }, { $set: { read: true } });
   res.json({ ok: true });
+});
+
+app.get("/api/push/vapid-public-key", (_req, res) => {
+  res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+app.post("/api/push/subscribe", async (req, res) => {
+  try {
+    const { subscription } = req.body || {};
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ error: "Subscrição inválida." });
+    }
+    const userId = req.session.user?.id || null;
+    const endpoint = subscription.endpoint;
+
+    await db.push_subscriptions().updateOne(
+      { endpoint },
+      {
+        $set: {
+          id: id(),
+          endpoint,
+          user_id: userId,
+          subscription,
+          updated_at: new Date().toISOString(),
+        },
+      },
+      { upsert: true }
+    );
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Erro ao guardar subscrição push:", error.message);
+    res.status(500).json({ error: "Erro ao registar subscrição." });
+  }
+});
+
+app.post("/api/admin/broadcast-slot", requireStaff, async (req, res) => {
+  try {
+    const { date, time } = req.body || {};
+    if (!date || !time) {
+      return res.status(400).json({ error: "Data e hora são obrigatórias." });
+    }
+
+    const formattedDate = new Date(date).toLocaleDateString("pt-PT");
+    const pushTitle = "⚡ Vaga Aberta na Barbearia!";
+    const pushMessage = `Surgiu uma vaga para corte hoje (${formattedDate}) às ${time} com o Diogo Viegas. Clica para reservar antes que esgote!`;
+
+    // 1. Criar notificação para todos os clientes registados na base de dados
+    const clients = await db.users().find({ role: "CLIENT" }).toArray();
+    for (const client of clients) {
+      await notify(
+        client.id,
+        pushTitle,
+        pushMessage,
+        "FLASH_SLOT",
+        `/marcar?date=${date}&time=${time}`,
+        `slot:${date}:${time}:${client.id}`
+      );
+    }
+
+    // 2. Notificar prioritariamente qualquer pessoa em lista de espera para essa data
+    const waitlist = await db.waitlist().find({ date, notified: false }).toArray();
+    for (const w of waitlist) {
+      await notify(
+        w.user_id,
+        "⚡ Vaga Disponível para a tua data!",
+        `Ficou disponível a vaga às ${time} na data que pretendias (${formattedDate}). Marca já!`,
+        "WAITLIST",
+        `/marcar?date=${date}&time=${time}`,
+        `waitlist-slot:${w.id}`
+      );
+    }
+
+    // 3. Emitir broadcast Web Push direto a todos os telemóveis/dispositivos com sininho ativado
+    await broadcastPush({
+      title: pushTitle,
+      body: pushMessage,
+      message: pushMessage,
+      url: `/marcar?date=${date}&time=${time}`,
+      tag: `flash-slot-${date}-${time}`,
+    }, req.session.user?.id);
+
+    res.json({ ok: true, notifiedCount: clients.length });
+  } catch (error) {
+    console.error("Erro ao divulgar vaga:", error.message);
+    res.status(500).json({ error: "Erro ao divulgar vaga aos clientes." });
+  }
 });
 
 app.get("/api/media/:id", async (req, res) => {

@@ -55,6 +55,7 @@ const db = {
   orders: () => collection("orders"),
   notifications: () => collection("notifications"),
   waitlist: () => collection("waitlist"),
+  push_subscriptions: () => collection("push_subscriptions"),
 };
 
 module.exports = {
