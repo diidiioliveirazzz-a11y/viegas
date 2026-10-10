@@ -409,7 +409,8 @@ app.get("/api/appointments/availability", async (req, res) => {
     const slotDuration = (baseDuration + (isDuo ? 10 : 5));
 
     const availableTimes = [];
-    for (let mins = openMinutes; mins + slotDuration <= closeMinutes; mins += 25) {
+    // Cada corte tem 45 min + 5 min margem = 50 min. Avança de 50 em 50 minutos.
+    for (let mins = openMinutes; mins + slotDuration <= closeMinutes; mins += 50) {
       const end = mins + slotDuration;
       // Only check lunch if the day closing is after lunch
       if (closeMinutes > lunchEnd && overlaps(mins, end, lunchStart, lunchEnd)) continue;
