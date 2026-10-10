@@ -45,7 +45,15 @@ app.use(
   })
 );
 
-app.use(express.static(www));
+app.use(
+  express.static(www, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".html") || filePath.endsWith(".js") || filePath.endsWith(".css") || filePath.endsWith("sw.js")) {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      }
+    },
+  })
+);
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 function currentUser(req) {
