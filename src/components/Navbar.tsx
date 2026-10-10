@@ -167,7 +167,6 @@ export default function Navbar({ user }: NavbarProps) {
 
         {/* Mobile Controls */}
         <div className="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
           <NotificationsBell />
 
           <Link
@@ -202,6 +201,10 @@ export default function Navbar({ user }: NavbarProps) {
               : "bg-white/95 border-slate-200 text-slate-800"
           }`}
         >
+          <div className="flex items-center justify-between p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/50">
+            <span className="text-xs font-bold">Alternar Tema</span>
+            <ThemeToggle />
+          </div>
           <div className="flex flex-col space-y-2.5 text-sm font-bold">
             <Link
               href="/diogo"

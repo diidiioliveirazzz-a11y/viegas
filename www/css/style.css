@@ -192,11 +192,11 @@ button, input, textarea, select { font: inherit; }
   display: flex; align-items: center; gap: 0.45rem; flex-shrink: 0;
 }
 .nav-mobile .btn-marcar-mob {
-  padding: 0.5rem 0.85rem; font-size: 0.75rem; border-radius: 0.6rem;
+  padding: 0.45rem 0.8rem; font-size: 0.75rem; border-radius: 0.65rem;
   font-weight: 800; letter-spacing: 0.02em; white-space: nowrap;
 }
 .icon-btn {
-  width: 2.3rem; height: 2.3rem; border-radius: 999px; border: 1px solid var(--card-border);
+  width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--card-border);
   background: var(--card-bg); color: var(--foreground); cursor: pointer; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
 }

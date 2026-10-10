@@ -414,29 +414,17 @@ app.get("/api/appointments/availability", async (req, res) => {
     const slotDuration = 50 * (isDuo ? 2 : 1);
 
     const availableTimes = [];
-    const checkAndPushSlot = (mins) => {
+    // Vagas de 1 em 1 hora (passo de 60 min: 09:00, 10:00, 11:00, 12:00, 14:00, 15:00, 16:00, 17:00, 18:00)
+    for (let mins = openMinutes; mins + slotDuration <= closeMinutes; mins += 60) {
       const end = mins + slotDuration;
-      if (closeMinutes > lunchEnd && overlaps(mins, end, lunchStart, lunchEnd)) return;
+      // Salta se colidir com o almoço (13:00 - 13:30)
+      if (closeMinutes > lunchEnd && overlaps(mins, end, lunchStart, lunchEnd)) continue;
       const startStr = minutesToTime(mins);
-      if (new Date(`${dateStr}T${startStr}:00`).getTime() < earliest) return;
+      if (new Date(`${dateStr}T${startStr}:00`).getTime() < earliest) continue;
       const busy =
         appointments.some((a) => overlaps(mins, end, timeToMinutes(a.start_time), timeToMinutes(a.end_time))) ||
         blocked.some((b) => overlaps(mins, end, timeToMinutes(b.start_time), timeToMinutes(b.end_time)));
       if (!busy) availableTimes.push(startStr);
-    };
-
-    // Cada corte tem 50 min. Vagas de 50 em 50 minutos:
-    // Bloco da manhã: 09:00, 09:50, 10:40, 11:30
-    const morningEnd = closeMinutes > lunchEnd ? lunchStart : closeMinutes;
-    for (let mins = openMinutes; mins + slotDuration <= morningEnd; mins += 50) {
-      checkAndPushSlot(mins);
-    }
-
-    // Bloco da tarde: recomeça após o almoço (13:30, 14:20, 15:10, 16:00, 16:50, 17:40)
-    if (closeMinutes > lunchEnd) {
-      for (let mins = lunchEnd; mins + slotDuration <= closeMinutes; mins += 50) {
-        checkAndPushSlot(mins);
-      }
     }
 
     res.json({ availableTimes, maxDate: maxBookableDate(isVip), today: todayDate(), schedule: daySched });

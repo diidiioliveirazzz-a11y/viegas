@@ -60,12 +60,17 @@ const VB = (() => {
           </div>
           <div class="nav-mobile">
             <a class="brand-button btn btn-marcar-mob" href="/marcar">MARCAR</a>
-            <button class="icon-btn" data-theme title="Tema">${theme === "dark" ? "☀️" : "🌙"}</button>
             <span class="bell" id="bell-wrap-mobile"><button class="icon-btn" data-bell title="Notificações" aria-label="Notificações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button></span>
             <button class="icon-btn" data-menu aria-label="Menu">☰</button>
           </div>
         </div>
         <div class="mobile-drawer" id="drawer">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.85rem;background:rgba(255,255,255,0.04);border:1px solid var(--card-border);border-radius:0.75rem;margin-bottom:0.8rem">
+            <span style="font-size:0.82rem;font-weight:700">Modo de Ecrã</span>
+            <button class="btn btn-ghost" data-theme style="padding:0.35rem 0.75rem;font-size:0.78rem;border-radius:0.6rem">
+              ${theme === "dark" ? "☀️ Modo Claro" : "🌙 Modo Escuro"}
+            </button>
+          </div>
           ${staff ? `<a class="admin-panel-btn" href="/dashboard" style="display:flex;justify-content:center;margin-bottom:.8rem;padding:.75rem">⚙️ Ir para Dashboard do Barbeiro</a>` : ""}
           ${user ? `<div style="padding:.5rem .7rem;font-size:.85rem;color:var(--muted)">Olá, <strong>${first}</strong></div>` : ""}
           <a href="/diogo">💈 O Diogo Viegas</a>
@@ -1986,7 +1991,7 @@ const VB = (() => {
 
   async function boot(page) {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js?v=17").then((reg) => {
+      navigator.serviceWorker.register("/sw.js?v=18").then((reg) => {
         reg.update();
       }).catch(() => {});
     }

@@ -123,18 +123,9 @@ export async function GET(req: Request) {
       }
     };
 
-    // Vagas de 50 em 50 minutos:
-    // Bloco da manhã: 09:00, 09:50, 10:40, 11:30
-    const morningEnd = closeMinutes > lunchEndMinutes ? lunchStartMinutes : closeMinutes;
-    for (let currentMins = openMinutes; currentMins + serviceDuration <= morningEnd; currentMins += 50) {
+    // Vagas de 1 em 1 hora (passo de 60 min: 09:00, 10:00, 11:00, 12:00, 14:00, 15:00, 16:00, 17:00, 18:00)
+    for (let currentMins = openMinutes; currentMins + serviceDuration <= closeMinutes; currentMins += 60) {
       checkAndPushSlot(currentMins);
-    }
-
-    // Bloco da tarde: recomeça após o almoço (13:30, 14:20, 15:10, 16:00, 16:50, 17:40)
-    if (closeMinutes > lunchEndMinutes) {
-      for (let currentMins = lunchEndMinutes; currentMins + serviceDuration <= closeMinutes; currentMins += 50) {
-        checkAndPushSlot(currentMins);
-      }
     }
 
     return NextResponse.json({
