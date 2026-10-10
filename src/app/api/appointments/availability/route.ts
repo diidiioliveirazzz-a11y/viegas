@@ -70,13 +70,12 @@ export async function GET(req: Request) {
     const availableSlots: string[] = [];
     const serviceDuration = 50 * (isDuo ? 2 : 1);
 
-    // Gerar slots de hora a hora (passo de 60 minutos): 09:00, 10:00, 11:00, 12:00, etc.
-    for (let currentMins = openMinutes; currentMins + serviceDuration <= closeMinutes; currentMins += 60) {
+    const checkAndPushSlot = (currentMins: number) => {
       const slotEndMins = currentMins + serviceDuration;
 
       // Ignora se colidir com o almoço
       if (currentMins < lunchEndMinutes && slotEndMins > lunchStartMinutes) {
-        continue;
+        return;
       }
 
       const h = Math.floor(currentMins / 60);
@@ -85,9 +84,8 @@ export async function GET(req: Request) {
 
       // Validação da antecedência mínima
       const slotDateObj = new Date(`${dateStr}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
-
       if (slotDateObj < earliestAllowedTime) {
-        continue;
+        return;
       }
 
       let isAvailable = true;
@@ -122,6 +120,20 @@ export async function GET(req: Request) {
 
       if (isAvailable) {
         availableSlots.push(slotStartStr);
+      }
+    };
+
+    // Vagas de 50 em 50 minutos:
+    // Bloco da manhã: 09:00, 09:50, 10:40, 11:30
+    const morningEnd = closeMinutes > lunchEndMinutes ? lunchStartMinutes : closeMinutes;
+    for (let currentMins = openMinutes; currentMins + serviceDuration <= morningEnd; currentMins += 50) {
+      checkAndPushSlot(currentMins);
+    }
+
+    // Bloco da tarde: recomeça após o almoço (13:30, 14:20, 15:10, 16:00, 16:50, 17:40)
+    if (closeMinutes > lunchEndMinutes) {
+      for (let currentMins = lunchEndMinutes; currentMins + serviceDuration <= closeMinutes; currentMins += 50) {
+        checkAndPushSlot(currentMins);
       }
     }
 
