@@ -104,7 +104,6 @@ const VB = (() => {
             <p>Terça e Sexta: 09:00 — 20:00</p>
             <p>Sábado: 09:00 — 12:00</p>
             <p style="color:var(--accent);font-weight:700">Domingo: Encerrado</p>
-            <p class="muted" style="font-size:.78rem;margin-top:.3rem">🥪 Almoço: 13:00 — 13:30</p>
           </div>
           <div><h4>Contacto & WhatsApp</h4><p>${phone}</p><p style="color:var(--accent);font-weight:700"><a href="https://instagram.com/viegas_barber" target="_blank" rel="noopener" style="color:inherit">Instagram: @viegas_barber</a></p></div>
         </div>
