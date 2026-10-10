@@ -753,6 +753,50 @@ const VB = (() => {
             <p class="hero-description">Atendimento individual, degradês milimétricos e um ambiente desenhado para o teu momento. Sem esperas desnecessárias, com marcação rápida e precisa.</p>
             <a class="brand-button btn" href="/marcar" style="padding:1rem 2rem">MARCAR AGORA</a>
             <div class="hero-availability"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:#f87171;font-weight:700">Ver vagas livres →</a></div>
+            <div class="radar-box" style="margin:0.75rem auto 0;max-width:36rem;text-align:left">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="radar-ping-dot"></span>
+                  <span style="font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#faf8f8">RADAR DE VAGAS EM TEMPO REAL</span>
+                </div>
+                <span class="radar-badge-live">AO VIVO</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem">
+                ${(() => {
+                  const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+                  const now = new Date();
+                  let cards = [];
+                  for (let i = 0; i < 3; i++) {
+                    const d = new Date();
+                    d.setDate(now.getDate() + i);
+                    const dayOfWeek = d.getDay();
+                    const isSunday = dayOfWeek === 0;
+                    const isSaturday = dayOfWeek === 6;
+                    const label = i === 0 ? "Hoje" : i === 1 ? "Amanhã" : dayLabels[dayOfWeek];
+                    const dateStr = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+                    const statusBadge = isSunday 
+                      ? `<span style="font-size:0.7rem;color:#f87171;font-weight:700">🔴 Encerrado</span>` 
+                      : `<span style="font-size:0.7rem;color:#4ade80;font-weight:700">🟢 Vagas livres</span>`;
+                    const hours = isSunday ? "Folga semanal" : (isSaturday ? "09:00 - 12:00" : "09:00 - 19:00");
+                    cards.push(`
+                      <a href="/marcar" class="radar-day-card" style="text-decoration:none;display:block">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem">
+                          <strong style="font-size:0.8rem;color:var(--foreground,#fff)">${label}</strong>
+                          <span style="font-size:0.68rem;color:var(--muted,#a1a1aa)">${dateStr}</span>
+                        </div>
+                        <div style="margin-bottom:0.2rem">${statusBadge}</div>
+                        <div style="font-size:0.68rem;color:var(--muted,#71717a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hours}</div>
+                      </a>
+                    `);
+                  }
+                  return cards.join("");
+                })()}
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;padding-top:0.65rem;border-top:1px solid rgba(255,255,255,0.08);font-size:0.7rem">
+                <span style="color:var(--muted,#a1a1aa)">⚡ Atendimento individual sem esperas</span>
+                <a href="/marcar" style="color:#f87171;font-weight:700;text-decoration:none">Escolher Horário →</a>
+              </div>
+            </div>
           </div>
         </section>
         <section class="section section-alt">

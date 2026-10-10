@@ -82,6 +82,62 @@ export default async function Home() {
               Ver vagas livres →
             </Link>
           </div>
+
+          {/* Radar de Vagas em Tempo Real */}
+          <div className="radar-box mt-3 max-w-xl mx-auto text-left shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="radar-ping-dot"></span>
+                <span className="text-xs font-black uppercase tracking-wider text-white">
+                  Radar de Vagas em Tempo Real
+                </span>
+              </div>
+              <span className="radar-badge-live">AO VIVO</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+              {[0, 1, 2].map((offset) => {
+                const d = new Date();
+                d.setDate(d.getDate() + offset);
+                const dayOfWeek = d.getDay();
+                const isSunday = dayOfWeek === 0;
+                const isSaturday = dayOfWeek === 6;
+                const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+                const label = offset === 0 ? "Hoje" : offset === 1 ? "Amanhã" : dayLabels[dayOfWeek];
+                const dateStr = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+
+                return (
+                  <Link
+                    key={offset}
+                    href="/marcar"
+                    className="radar-day-card block p-2.5 rounded-xl transition"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-xs text-white">{label}</span>
+                      <span className="text-[10px] text-zinc-400">{dateStr}</span>
+                    </div>
+                    <div className="text-[11px] font-semibold mb-0.5">
+                      {isSunday ? (
+                        <span className="text-red-400">🔴 Encerrado</span>
+                      ) : (
+                        <span className="text-emerald-400">🟢 Vagas livres</span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-zinc-400 truncate">
+                      {isSunday ? "Folga semanal" : isSaturday ? "09:00 - 12:00" : "09:00 - 19:00"}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between items-center text-[11px]">
+              <span className="text-zinc-400">⚡ Atendimento individual sem esperas</span>
+              <Link href="/marcar" className="font-bold text-red-500 hover:text-red-400 transition">
+                Escolher Horário →
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
