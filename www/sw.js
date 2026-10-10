@@ -1,4 +1,4 @@
-const CACHE_NAME = "viegas-barber-v16";
+const CACHE_NAME = "viegas-barber-v17";
 const STATIC_ASSETS = [
   "/",
   "/marcar",
@@ -10,8 +10,8 @@ const STATIC_ASSETS = [
   "/apple-touch-icon.png",
   "/icon-192.png",
   "/icon-512.png",
-  "/css/style.css?v=16",
-  "/js/app.js?v=16"
+  "/css/style.css?v=17",
+  "/js/app.js?v=17"
 ];
 
 self.addEventListener("install", (event) => {
@@ -45,13 +45,16 @@ self.addEventListener("fetch", (event) => {
   // API requests should never be cached
   if (requestUrl.pathname.startsWith("/api/")) return;
 
-  // Network-first for CSS, JS, and HTML so updates load immediately
-  if (
+  const isHtmlOrAsset =
+    event.request.mode === "navigate" ||
+    (event.request.headers.get("accept") && event.request.headers.get("accept").includes("text/html")) ||
     requestUrl.pathname.endsWith(".js") ||
     requestUrl.pathname.endsWith(".css") ||
     requestUrl.pathname.endsWith(".html") ||
-    requestUrl.pathname === "/"
-  ) {
+    !requestUrl.pathname.includes(".");
+
+  // Network-first for CSS, JS, and HTML so updates load immediately
+  if (isHtmlOrAsset) {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {

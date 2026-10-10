@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 
+import { Bell } from "lucide-react";
+
 type UserNotification = {
   id: string;
   title: string;
@@ -86,7 +88,7 @@ export default function NotificationsBell() {
           isDark ? "border-zinc-800 bg-zinc-900 text-amber-400" : "border-slate-200 bg-white text-amber-600"
         }`}
       >
-        <span aria-hidden="true">♢</span>
+        <Bell className="w-4 h-4" />
         {unread > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-amber-500 px-1 text-[10px] font-bold text-black">{unread}</span>}
       </button>
       {open && (

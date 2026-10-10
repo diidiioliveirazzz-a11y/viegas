@@ -1400,8 +1400,15 @@ const htmlPages = [
   "/dashboard.html",
 ];
 
+app.get("/sw.js", (_req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Content-Type", "application/javascript");
+  res.sendFile(path.join(www, "sw.js"));
+});
+
 htmlPages.forEach((route) => {
   app.get(route === "/" ? "/" : route.replace(".html", ""), (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     const file = route === "/" ? "index.html" : route.replace(/^\//, "");
     res.sendFile(path.join(www, file.endsWith(".html") ? file : `${file}.html`));
   });

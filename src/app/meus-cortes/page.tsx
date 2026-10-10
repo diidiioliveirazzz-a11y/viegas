@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import HairHistoryClient from "./HairHistoryClient";
+import NotificationsBell from "@/components/NotificationsBell";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function MeusCortesPage() {
   const session = await getServerSession(authOptions);
@@ -33,12 +35,16 @@ export default async function MeusCortesPage() {
         <Link href="/" className="text-xl font-black tracking-tight text-white hover:text-amber-500 transition">
           ← VIEGAS<span className="text-amber-500">.</span>BARBER
         </Link>
-        <Link
-          href="/marcar"
-          className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-bold transition"
-        >
-          Marcar Corte
-        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <NotificationsBell />
+          <Link
+            href="/marcar"
+            className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-bold transition"
+          >
+            Marcar Corte
+          </Link>
+        </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-6 py-12">

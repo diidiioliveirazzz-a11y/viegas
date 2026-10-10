@@ -636,15 +636,25 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .table th, .table td { text-align: left; padding: 0.7rem; border-bottom: 1px solid #27272a; }
 .bell { position: relative; display: inline-flex; }
+.bell .icon-btn {
+  color: var(--accent);
+}
 .bell .count {
   position: absolute; top: -0.25rem; right: -0.25rem; background: #ef4444; color: #fff;
   font-size: 0.62rem; font-weight: 800; min-width: 1.1rem; height: 1.1rem; border-radius: 999px; display: grid; place-items: center;
   border: 2px solid var(--nav-bg, #090909);
+  pointer-events: none;
 }
-.dropdown {
-  position: absolute; right: 0; top: 2.8rem; width: 19rem; max-width: calc(100vw - 1.5rem); max-height: 22rem; overflow: auto;
-  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 0.85rem; padding: 0.75rem; z-index: 100;
+.dropdown, #bell-panel {
+  position: absolute; right: 0; top: 2.8rem; width: 19rem; max-width: calc(100vw - 1.5rem); max-height: 24rem; overflow: auto;
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 0.85rem; padding: 0.75rem; z-index: 1000;
   box-shadow: 0 16px 36px rgba(0,0,0,0.55);
+}
+@media (max-width: 480px) {
+  #bell-wrap-mobile #bell-panel {
+    right: -2.5rem;
+    width: calc(100vw - 1.5rem);
+  }
 }
 
 /* PWA Mobile Notifications Banner & Drawer Box */

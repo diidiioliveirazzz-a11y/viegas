@@ -53,7 +53,7 @@ const VB = (() => {
           </nav>
           <div class="nav-right">
             <button class="icon-btn" data-theme title="Tema">${theme === "dark" ? "☀️" : "🌙"}</button>
-            <span class="bell" id="bell-wrap"><button class="icon-btn" data-bell title="Notificações">🔔</button></span>
+            <span class="bell" id="bell-wrap"><button class="icon-btn" data-bell title="Notificações" aria-label="Notificações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button></span>
             ${!staff && user ? `<span class="muted" style="white-space:nowrap">Olá, <strong>${first}</strong></span><button class="icon-btn" data-logout title="Sair">Sair</button>` : ""}
             ${!user ? `<a href="/login" style="font-weight:700;font-size:.85rem">Entrar</a>` : ""}
             <a class="brand-button btn" href="/marcar">MARCAR AGORA</a>
@@ -61,7 +61,7 @@ const VB = (() => {
           <div class="nav-mobile">
             <a class="brand-button btn btn-marcar-mob" href="/marcar">MARCAR</a>
             <button class="icon-btn" data-theme title="Tema">${theme === "dark" ? "☀️" : "🌙"}</button>
-            <span class="bell" id="bell-wrap-mobile"><button class="icon-btn" data-bell title="Notificações">🔔</button></span>
+            <span class="bell" id="bell-wrap-mobile"><button class="icon-btn" data-bell title="Notificações" aria-label="Notificações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button></span>
             <button class="icon-btn" data-menu aria-label="Menu">☰</button>
           </div>
         </div>
@@ -1986,7 +1986,7 @@ const VB = (() => {
 
   async function boot(page) {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").then((reg) => {
+      navigator.serviceWorker.register("/sw.js?v=17").then((reg) => {
         reg.update();
       }).catch(() => {});
     }

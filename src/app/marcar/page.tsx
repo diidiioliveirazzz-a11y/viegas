@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Suspense } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationsBell from "@/components/NotificationsBell";
 import { loyaltyTierForVisits } from "@/lib/loyalty";
 
 export default async function MarcarPage() {
@@ -35,8 +36,9 @@ export default async function MarcarPage() {
           <span>BARBER</span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <ThemeToggle />
+          <NotificationsBell />
 
           {session ? (
             <span className="text-xs text-slate-600 dark:text-zinc-400">

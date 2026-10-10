@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loyaltyTierForVisits } from "@/lib/loyalty";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationsBell from "@/components/NotificationsBell";
 
 export default async function FidelizacaoPage() {
   const session = await getServerSession(authOptions);
@@ -43,6 +44,7 @@ export default async function FidelizacaoPage() {
         </Link>
         <div className="flex items-center gap-3">
           <ThemeToggle />
+          <NotificationsBell />
           <Link
             href="/marcar"
             className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-bold transition"

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import ClientAppointmentsList from "./ClientAppointmentsList";
+import NotificationsBell from "@/components/NotificationsBell";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function MinhasMarcacoesPage({
   searchParams,
@@ -58,12 +60,16 @@ export default async function MinhasMarcacoesPage({
         <Link href="/" className="text-xl font-bold tracking-tight text-slate-900 hover:text-pink-600 dark:text-white dark:hover:text-sky-400 transition">
           ← VIEGAS BARBER
         </Link>
-        <Link
-          href="/marcar"
-          className="bg-gradient-to-r from-purple-500 via-pink-500 to-sky-400 hover:opacity-95 text-white dark:bg-sky-400 dark:bg-none dark:hover:bg-sky-300 dark:text-zinc-950 px-4 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-pink-500/15 dark:shadow-sky-400/15"
-        >
-          + Nova Marcação
-        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <NotificationsBell />
+          <Link
+            href="/marcar"
+            className="bg-gradient-to-r from-purple-500 via-pink-500 to-sky-400 hover:opacity-95 text-white dark:bg-sky-400 dark:bg-none dark:hover:bg-sky-300 dark:text-zinc-950 px-4 py-2 rounded-xl text-sm font-bold transition shadow-lg shadow-pink-500/15 dark:shadow-sky-400/15"
+          >
+            + Nova Marcação
+          </Link>
+        </div>
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-12">

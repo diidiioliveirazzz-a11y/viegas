@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import SubscriptionClient from "./SubscriptionClient";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationsBell from "@/components/NotificationsBell";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,10 @@ export default async function PlanoPage() {
           <Link href="/fidelizacao" className="text-sm font-semibold text-amber-600 dark:text-amber-400">
             ← Fidelização
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <NotificationsBell />
+          </div>
         </div>
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">Clube Viegas</p>
