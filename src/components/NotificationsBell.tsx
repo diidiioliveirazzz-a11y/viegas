@@ -19,6 +19,34 @@ export default function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [error, setError] = useState("");
+  const [perm, setPerm] = useState<string>("default");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setPerm(Notification.permission);
+    }
+  }, []);
+
+  async function requestNotificationPermission() {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      alert("O teu navegador não suporta notificações de sistema.");
+      return;
+    }
+    try {
+      const result = await Notification.requestPermission();
+      setPerm(result);
+      if (result === "granted" && "serviceWorker" in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        reg.showNotification("Notificações Ativadas! 💈", {
+          body: "Receberás avisos de cortes, vagas e lembretes da Viegas Barber.",
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/notifications")
@@ -65,7 +93,21 @@ export default function NotificationsBell() {
         <div className={`absolute right-0 top-12 z-50 w-80 max-w-[90vw] overflow-hidden rounded-2xl border shadow-2xl ${
           isDark ? "border-zinc-800 bg-zinc-950 text-white" : "border-slate-200 bg-white text-slate-900"
         }`}>
-          <h2 className="border-b border-inherit p-4 text-sm font-bold">Notificações</h2>
+          <h2 className="border-b border-inherit p-4 text-sm font-bold flex justify-between items-center">
+            <span>Notificações</span>
+            {perm === "granted" && <span className="text-[10px] text-green-500 font-normal">● Ativas</span>}
+          </h2>
+          {perm !== "granted" && (
+            <div className="p-3 border-b border-inherit bg-amber-500/10">
+              <button
+                type="button"
+                onClick={requestNotificationPermission}
+                className="w-full py-2 px-3 text-xs font-bold bg-amber-500 text-black rounded-xl hover:bg-amber-400 transition"
+              >
+                🔔 Ativar Notificações no Telemóvel
+              </button>
+            </div>
+          )}
           {error && <p role="alert" className="px-4 pt-3 text-xs text-red-500">{error}</p>}
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (

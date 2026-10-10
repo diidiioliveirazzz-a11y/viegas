@@ -635,14 +635,66 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
 .dash-main { flex: 1; padding: 1.5rem; overflow: auto; min-width: 0; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .table th, .table td { text-align: left; padding: 0.7rem; border-bottom: 1px solid #27272a; }
-.bell { position: relative; }
+.bell { position: relative; display: inline-flex; }
 .bell .count {
-  position: absolute; top: -0.2rem; right: -0.2rem; background: #ef4444; color: #fff;
-  font-size: 0.6rem; min-width: 1rem; height: 1rem; border-radius: 999px; display: grid; place-items: center;
+  position: absolute; top: -0.25rem; right: -0.25rem; background: #ef4444; color: #fff;
+  font-size: 0.62rem; font-weight: 800; min-width: 1.1rem; height: 1.1rem; border-radius: 999px; display: grid; place-items: center;
+  border: 2px solid var(--nav-bg, #090909);
 }
 .dropdown {
-  position: absolute; right: 0; top: 2.6rem; width: 18rem; max-height: 20rem; overflow: auto;
-  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 0.8rem; padding: 0.6rem; z-index: 70;
+  position: absolute; right: 0; top: 2.8rem; width: 19rem; max-width: calc(100vw - 1.5rem); max-height: 22rem; overflow: auto;
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 0.85rem; padding: 0.75rem; z-index: 100;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.55);
+}
+
+/* PWA Mobile Notifications Banner & Drawer Box */
+.pwa-floating-banner {
+  position: fixed; bottom: 1.2rem; left: 1rem; right: 1rem; max-width: 28rem; margin: 0 auto;
+  background: var(--card-bg); border: 1px solid rgba(239, 68, 68, 0.45);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(239, 68, 68, 0.15);
+  border-radius: 1rem; padding: 0.85rem 1rem; z-index: 999;
+  display: flex; flex-direction: column; gap: 0.75rem;
+  animation: pwaSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes pwaSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pwa-floating-banner .banner-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem;
+}
+.pwa-floating-banner .banner-icon-title {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+}
+.pwa-floating-banner .banner-icon {
+  font-size: 1.4rem; line-height: 1; flex-shrink: 0; margin-top: 0.1rem;
+}
+.pwa-floating-banner .banner-title {
+  font-size: 0.88rem; font-weight: 800; color: var(--foreground);
+}
+.pwa-floating-banner .banner-text {
+  font-size: 0.76rem; color: var(--muted); margin: 0.2rem 0 0; line-height: 1.35;
+}
+.pwa-floating-banner .banner-actions {
+  display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;
+}
+.pwa-floating-banner .banner-btn-enable {
+  padding: 0.45rem 1.1rem; font-size: 0.76rem; border-radius: 0.6rem;
+}
+.pwa-floating-banner .banner-btn-dismiss {
+  padding: 0.45rem 0.8rem; font-size: 0.76rem; border-radius: 0.6rem;
+}
+
+.drawer-pwa-box {
+  margin: 0.75rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--card-border);
+}
+.drawer-pwa-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 0.85rem;
+  padding: 0.75rem;
 }
 
 /* Loyalty Card Responsive Styling */

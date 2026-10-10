@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import PwaNotificationPrompt from "@/components/PwaNotificationPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-full flex flex-col bg-background text-foreground font-sans transition-colors duration-300`}>
         <ThemeProvider>
           {children}
+          <PwaNotificationPrompt />
         </ThemeProvider>
         <script
           dangerouslySetInnerHTML={{

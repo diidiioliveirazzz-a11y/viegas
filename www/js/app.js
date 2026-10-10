@@ -53,7 +53,7 @@ const VB = (() => {
           </nav>
           <div class="nav-right">
             <button class="icon-btn" data-theme title="Tema">${theme === "dark" ? "☀️" : "🌙"}</button>
-            ${user ? `<span class="bell" id="bell-wrap"><button class="icon-btn" data-bell title="Notificações">🔔</button></span>` : ""}
+            <span class="bell" id="bell-wrap"><button class="icon-btn" data-bell title="Notificações">🔔</button></span>
             ${!staff && user ? `<span class="muted" style="white-space:nowrap">Olá, <strong>${first}</strong></span><button class="icon-btn" data-logout title="Sair">Sair</button>` : ""}
             ${!user ? `<a href="/login" style="font-weight:700;font-size:.85rem">Entrar</a>` : ""}
             <a class="brand-button btn" href="/marcar">MARCAR AGORA</a>
@@ -61,6 +61,7 @@ const VB = (() => {
           <div class="nav-mobile">
             <a class="brand-button btn btn-marcar-mob" href="/marcar">MARCAR</a>
             <button class="icon-btn" data-theme title="Tema">${theme === "dark" ? "☀️" : "🌙"}</button>
+            <span class="bell" id="bell-wrap-mobile"><button class="icon-btn" data-bell title="Notificações">🔔</button></span>
             <button class="icon-btn" data-menu aria-label="Menu">☰</button>
           </div>
         </div>
@@ -73,6 +74,12 @@ const VB = (() => {
           <a href="/loja">🛒 Loja de Produtos</a>
           <a href="/fidelizacao">🎁 Cartão de Fidelização</a>
           ${user ? `<a href="/minhas-marcacoes">📅 As Minhas Marcações</a>` : ""}
+          <a href="javascript:void(0)" data-bell style="display:flex;align-items:center;justify-content:space-between"><span>🔔 Notificações & Alertas</span><span class="count-drawer" style="display:none"></span></a>
+          <div class="drawer-pwa-box" id="drawer-pwa-box">
+            <button id="drawer-btn-enable" class="brand-button btn" style="width:100%;font-size:0.82rem;padding:0.7rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;gap:0.5rem">
+              <span>🔔</span> <strong>Ativar Notificações no Telemóvel</strong>
+            </button>
+          </div>
           ${user ? `<button class="btn-ghost btn" style="width:100%;margin-top:.6rem" data-logout>Terminar Sessão</button>` : `<a class="btn-ghost btn" style="width:100%;margin-top:.6rem;text-align:center" href="/login">Iniciar Sessão / Criar Conta</a>`}
         </div>
       </header>`;
@@ -114,7 +121,13 @@ const VB = (() => {
       };
     });
     document.querySelectorAll("[data-menu]").forEach((btn) => {
-      btn.onclick = () => document.getElementById("drawer")?.classList.toggle("open");
+      btn.onclick = () => {
+        const drawer = document.getElementById("drawer");
+        if (drawer) {
+          drawer.classList.toggle("open");
+          updateNotificationUI();
+        }
+      };
     });
     document.querySelectorAll("[data-logout]").forEach((btn) => {
       btn.onclick = async () => {
@@ -126,6 +139,41 @@ const VB = (() => {
       btn.onclick = toggleBell;
     });
     mountAssistant();
+    updateNotificationUI();
+  }
+
+  function isIOSDevice() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function isStandalonePWA() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function getNotificationPermission() {
+    if (!("Notification" in window)) return "unsupported";
+    return Notification.permission;
+  }
+
+  function showNotificationToast(msg, isSuccess = true) {
+    let toast = document.getElementById("vb-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "vb-toast";
+      toast.style.cssText =
+        "position:fixed;top:1.2rem;left:50%;transform:translateX(-50%);z-index:99999;padding:0.75rem 1.3rem;border-radius:0.85rem;font-size:0.82rem;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,0.6);transition:opacity 0.3s ease,transform 0.3s ease;pointer-events:none;text-align:center;max-width:92vw;";
+      document.body.appendChild(toast);
+    }
+    toast.style.background = isSuccess ? "#15803d" : "#b91c1c";
+    toast.style.color = "#ffffff";
+    toast.textContent = msg;
+    toast.style.opacity = "1";
+    setTimeout(() => {
+      if (toast) toast.style.opacity = "0";
+    }, 4000);
   }
 
   function playNotificationSound() {
@@ -168,17 +216,174 @@ const VB = (() => {
     } catch {}
   }
 
+  function triggerTestNotification() {
+    showNotificationToast("🔔 Enviada notificação de teste!");
+    showSystemNotification(
+      "Viegas Barber 💈",
+      "As notificações no teu telemóvel estão ativas! Vais receber avisos de cortes, confirmações e vagas."
+    );
+    playNotificationSound();
+  }
+
   async function requestPushPermission() {
+    const isIOS = isIOSDevice();
+    const isStandalone = isStandalonePWA();
+
+    // Caso iOS Safari fora de PWA standalone
+    if (isIOS && !isStandalone && !("Notification" in window)) {
+      alert(
+        "📱 Para ativar notificações no iPhone (iOS):\n\n" +
+        "1. Toca no botão Partilhar (ícone com quadrado e seta ⎋ na barra inferior do Safari).\n" +
+        "2. Seleciona 'Adicionar ao Ecrã Principal' (+).\n" +
+        "3. Abre a aplicação a partir do novo ícone no teu ecrã inicial para receberes todos os alertas de cortes e vagas!"
+      );
+      return;
+    }
+
     if (!("Notification" in window)) {
       alert("O teu navegador não suporta notificações de sistema.");
       return;
     }
-    const perm = await Notification.requestPermission();
-    if (perm === "granted") {
-      showSystemNotification("Notificações Ativadas! 💈", "Receberás avisos de novos cortes, vagas e lembretes da Viegas Barber.");
-      const btn = document.getElementById("enable-pwa-notifs");
-      if (btn) btn.style.display = "none";
+
+    if (Notification.permission === "denied") {
+      alert(
+        "⚠️ As notificações estão bloqueadas nas definições do teu telemóvel/navegador.\n\n" +
+        "Para ativar:\n" +
+        "• No Chrome/Android: Clica no cadeado/ícone ao lado do link do site > Definições do site > Notificações > Permitir.\n" +
+        "• No iPhone: Abre Definições do iOS > Notificações > Viegas Barber > Ativar Notificações."
+      );
+      return;
     }
+
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm === "granted") {
+        showNotificationToast("🔔 Notificações ativadas com sucesso!");
+        showSystemNotification(
+          "Notificações Ativadas! 💈",
+          "Receberás avisos de novos cortes, vagas de última hora e lembretes da Viegas Barber."
+        );
+        playNotificationSound();
+        dismissFloatingBanner(true);
+        updateNotificationUI();
+      } else if (perm === "denied") {
+        updateNotificationUI();
+        alert("Notificações recusadas. Podes alterar mais tarde nas definições do teu telefone.");
+      }
+    } catch (err) {
+      console.error("Erro ao pedir permissão de notificações:", err);
+    }
+  }
+
+  function dismissFloatingBanner(permanent = false) {
+    const banner = document.getElementById("pwa-notif-floating-banner");
+    if (banner) banner.remove();
+    if (permanent) {
+      localStorage.setItem("vb-notif-banner-dismissed", "permanent");
+    } else {
+      localStorage.setItem("vb-notif-banner-dismissed", String(Date.now()));
+    }
+  }
+
+  function checkFloatingBanner() {
+    const perm = getNotificationPermission();
+    const existing = document.getElementById("pwa-notif-floating-banner");
+
+    if (perm === "granted" || perm === "unsupported") {
+      if (existing) existing.remove();
+      return;
+    }
+
+    const dismissed = localStorage.getItem("vb-notif-banner-dismissed");
+    if (dismissed === "permanent") return;
+    if (dismissed) {
+      const past = parseInt(dismissed, 10);
+      if (!isNaN(past) && Date.now() - past < 24 * 60 * 60 * 1000) {
+        return;
+      }
+    }
+
+    if (existing) return;
+
+    const banner = document.createElement("div");
+    banner.id = "pwa-notif-floating-banner";
+    banner.className = "pwa-floating-banner";
+    banner.innerHTML = `
+      <div class="banner-head">
+        <div class="banner-icon-title">
+          <span class="banner-icon">🔔</span>
+          <div>
+            <div class="banner-title">Ativar notificações no telemóvel?</div>
+            <p class="banner-text">Recebe lembretes de corte e avisos imediatos quando abrirem novas vagas.</p>
+          </div>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <button id="pwa-banner-dismiss-btn" class="btn btn-ghost banner-btn-dismiss">Agora não</button>
+        <button id="pwa-banner-enable-btn" class="brand-button btn banner-btn-enable">Ativar Notificações</button>
+      </div>
+    `;
+
+    document.body.appendChild(banner);
+    document.getElementById("pwa-banner-enable-btn")?.addEventListener("click", () => {
+      requestPushPermission();
+    });
+    document.getElementById("pwa-banner-dismiss-btn")?.addEventListener("click", () => {
+      dismissFloatingBanner(false);
+    });
+  }
+
+  function updateNotificationUI() {
+    const drawerBox = document.getElementById("drawer-pwa-box");
+    const isIOS = isIOSDevice();
+    const isStandalone = isStandalonePWA();
+    const perm = getNotificationPermission();
+
+    if (drawerBox) {
+      if (isIOS && !isStandalone && !("Notification" in window)) {
+        drawerBox.innerHTML = `
+          <div class="drawer-pwa-card" style="border-color:rgba(239,68,68,0.3)">
+            <div style="font-weight:700;color:var(--accent);display:flex;align-items:center;gap:0.4rem;font-size:0.8rem">
+              <span>📲</span> Notificações no iPhone
+            </div>
+            <p style="margin:0.35rem 0 0.5rem;font-size:0.74rem;color:var(--muted);line-height:1.35">
+              Para ativar no iPhone, toca em <strong>Partilhar ⎋</strong> no Safari e depois em <strong>"Adicionar ao Ecrã Principal"</strong>.
+            </p>
+            <button id="drawer-pwa-ios-help" class="btn btn-ghost" style="width:100%;font-size:0.74rem;padding:0.45rem">Como ativar no iPhone</button>
+          </div>`;
+        document.getElementById("drawer-pwa-ios-help")?.addEventListener("click", requestPushPermission);
+      } else if (perm === "granted") {
+        drawerBox.innerHTML = `
+          <div class="drawer-pwa-card" style="border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+              <span style="color:#22c55e;font-weight:700;font-size:0.78rem">✓ Notificações do Telemóvel Ativas</span>
+              <button id="drawer-btn-test" class="btn btn-ghost" style="padding:0.35rem 0.65rem;font-size:0.72rem;border-radius:0.5rem">Testar 🔔</button>
+            </div>
+          </div>`;
+        document.getElementById("drawer-btn-test")?.addEventListener("click", triggerTestNotification);
+      } else if (perm === "denied") {
+        drawerBox.innerHTML = `
+          <div class="drawer-pwa-card" style="border-color:rgba(239,68,68,0.3)">
+            <div style="color:#ef4444;font-weight:700;font-size:0.8rem">⚠️ Notificações Bloqueadas</div>
+            <p style="margin:0.25rem 0 0.5rem;font-size:0.73rem;color:var(--muted);line-height:1.3">
+              Permite os avisos nas definições do telemóvel para receberes novidades e vagas.
+            </p>
+            <button id="drawer-btn-denied-help" class="btn btn-ghost" style="width:100%;font-size:0.74rem;padding:0.45rem">Como desbloquear</button>
+          </div>`;
+        document.getElementById("drawer-btn-denied-help")?.addEventListener("click", requestPushPermission);
+      } else {
+        drawerBox.innerHTML = `
+          <div class="drawer-pwa-card">
+            <button id="drawer-btn-enable" class="brand-button btn" style="width:100%;font-size:0.78rem;padding:0.6rem;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;gap:0.4rem">
+              <span>🔔</span> Ativar Notificações no Telemóvel
+            </button>
+            <p style="margin:0.35rem 0 0;font-size:0.72rem;color:var(--muted);text-align:center">Recebe avisos de vagas e lembretes de corte</p>
+          </div>`;
+        document.getElementById("drawer-btn-enable")?.addEventListener("click", requestPushPermission);
+      }
+    }
+
+    checkFloatingBanner();
   }
 
   let notificationPoller = null;
@@ -190,18 +395,40 @@ const VB = (() => {
       try {
         const data = await api("/api/notifications/unread");
         const count = data.count || 0;
-        const bellWrap = document.getElementById("bell-wrap");
-        if (bellWrap) {
-          let countBadge = bellWrap.querySelector(".count");
+
+        const updateCountBadge = (wrapId) => {
+          const wrap = document.getElementById(wrapId);
+          if (!wrap) return;
+          let countBadge = wrap.querySelector(".count");
           if (count > 0) {
             if (!countBadge) {
               countBadge = document.createElement("span");
               countBadge.className = "count";
-              bellWrap.appendChild(countBadge);
+              wrap.appendChild(countBadge);
             }
             countBadge.textContent = count;
           } else if (countBadge) {
             countBadge.remove();
+          }
+        };
+
+        updateCountBadge("bell-wrap");
+        updateCountBadge("bell-wrap-mobile");
+
+        const drawerBellCount = document.querySelector(".count-drawer");
+        if (drawerBellCount) {
+          if (count > 0) {
+            drawerBellCount.style.display = "inline-block";
+            drawerBellCount.style.marginLeft = "0.5rem";
+            drawerBellCount.style.background = "#ef4444";
+            drawerBellCount.style.color = "#fff";
+            drawerBellCount.style.padding = "0.1rem 0.45rem";
+            drawerBellCount.style.borderRadius = "999px";
+            drawerBellCount.style.fontSize = "0.7rem";
+            drawerBellCount.style.fontWeight = "800";
+            drawerBellCount.textContent = count;
+          } else {
+            drawerBellCount.style.display = "none";
           }
         }
 
@@ -222,18 +449,37 @@ const VB = (() => {
     notificationPoller = setInterval(check, 20000);
   }
 
-  async function toggleBell() {
-    const wrap = document.getElementById("bell-wrap") || document.querySelector(".nav-mobile");
+  async function toggleBell(event) {
+    if (event) {
+      if (typeof event.stopPropagation === "function") event.stopPropagation();
+    }
+
+    document.getElementById("drawer")?.classList.remove("open");
+
+    const desktopWrap = document.getElementById("bell-wrap");
+    const mobileWrap = document.getElementById("bell-wrap-mobile");
+    const isMobileVisible = mobileWrap && window.getComputedStyle(mobileWrap).display !== "none";
+    const targetWrap = isMobileVisible ? mobileWrap : (desktopWrap || document.querySelector(".navbar"));
+
     let panel = document.getElementById("bell-panel");
     if (panel) {
       panel.remove();
       return;
     }
-    const items = await api("/api/notifications");
-    const countBadge = wrap?.querySelector(".count");
-    if (countBadge) countBadge.remove();
 
-    const needsPerm = "Notification" in window && Notification.permission === "default";
+    let items = [];
+    try {
+      items = await api("/api/notifications");
+    } catch {
+      items = [];
+    }
+
+    document.querySelectorAll(".count").forEach((b) => b.remove());
+    const drawerBellCount = document.querySelector(".count-drawer");
+    if (drawerBellCount) drawerBellCount.style.display = "none";
+
+    const perm = getNotificationPermission();
+    const isGranted = perm === "granted";
 
     panel = document.createElement("div");
     panel.id = "bell-panel";
@@ -241,12 +487,19 @@ const VB = (() => {
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:.5rem;border-bottom:1px solid var(--card-border);margin-bottom:.5rem">
         <strong>Notificações</strong>
-        <span class="muted" style="font-size:.7rem">${items.length} total</span>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <span class="muted" style="font-size:.7rem">${items.length} total</span>
+          <button id="close-bell-panel" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.95rem;padding:0.2rem" title="Fechar">✕</button>
+        </div>
       </div>
-      ${needsPerm ? `
-        <button id="enable-pwa-notifs" class="brand-button btn" style="width:100%;margin-bottom:.7rem;font-size:.75rem;padding:.5rem;border-radius:.6rem">
-          🔔 Ativar Notificações no Ecrã
-        </button>` : ""}
+      ${!isGranted ? `
+        <button id="enable-pwa-notifs" class="brand-button btn" style="width:100%;margin-bottom:.7rem;font-size:.76rem;padding:.55rem;border-radius:.6rem">
+          🔔 Ativar Notificações no Telemóvel
+        </button>` : `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;margin-bottom:.6rem;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:.5rem;font-size:.72rem">
+          <span style="color:#22c55e;font-weight:700">✓ Alertas no telemóvel ativos</span>
+          <button id="test-pwa-notif-btn" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:.72rem">Testar som 🔔</button>
+        </div>`}
       ${items.length
         ? items.map((n) => `
           <div style="padding:.5rem 0;border-bottom:1px solid var(--card-border);font-size:.8rem">
@@ -257,9 +510,35 @@ const VB = (() => {
         : `<p class="muted" style="font-size:.8rem;padding:.5rem 0">Sem notificações de momento.</p>`}
     `;
 
-    (document.getElementById("bell-wrap") || wrap).appendChild(panel);
-    panel.querySelector("#enable-pwa-notifs")?.addEventListener("click", requestPushPermission);
-    await api("/api/notifications/read", { method: "POST" });
+    if (targetWrap) {
+      targetWrap.appendChild(panel);
+    } else {
+      document.body.appendChild(panel);
+    }
+
+    panel.querySelector("#enable-pwa-notifs")?.addEventListener("click", () => {
+      requestPushPermission();
+    });
+    panel.querySelector("#test-pwa-notif-btn")?.addEventListener("click", () => {
+      triggerTestNotification();
+    });
+    panel.querySelector("#close-bell-panel")?.addEventListener("click", () => {
+      panel.remove();
+    });
+
+    const clickOutsideHandler = (e) => {
+      if (!panel.contains(e.target) && !e.target.closest("[data-bell]")) {
+        panel.remove();
+        document.removeEventListener("click", clickOutsideHandler);
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener("click", clickOutsideHandler);
+    }, 10);
+
+    try {
+      await api("/api/notifications/read", { method: "POST" });
+    } catch {}
   }
 
   function escapeHtml(str) {

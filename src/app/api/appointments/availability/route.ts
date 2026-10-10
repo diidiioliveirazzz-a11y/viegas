@@ -68,10 +68,10 @@ export async function GET(req: Request) {
     });
 
     const availableSlots: string[] = [];
-    const serviceDuration = service.duration * (isDuo ? 2 : 1);
+    const serviceDuration = 50 * (isDuo ? 2 : 1);
 
-    // Gerar slots de 20 em 20 minutos dentro do horário de abertura e fecho
-    for (let currentMins = openMinutes; currentMins + serviceDuration <= closeMinutes; currentMins += 20) {
+    // Gerar slots de hora a hora (passo de 60 minutos): 09:00, 10:00, 11:00, 12:00, etc.
+    for (let currentMins = openMinutes; currentMins + serviceDuration <= closeMinutes; currentMins += 60) {
       const slotEndMins = currentMins + serviceDuration;
 
       // Ignora se colidir com o almoço

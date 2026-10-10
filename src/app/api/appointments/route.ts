@@ -88,7 +88,7 @@ export async function POST(req: Request) {
 
     const startParts = startTime.split(":").map(Number);
     const startMins = startParts[0] * 60 + startParts[1];
-    const totalDuration = service.duration * (isDuo ? 2 : 1);
+    const totalDuration = 50 * (isDuo ? 2 : 1);
     const endMins = startMins + totalDuration;
     const endTime = `${String(Math.floor(endMins / 60)).padStart(2, "0")}:${String(endMins % 60).padStart(2, "0")}`;
     const settings = await getSettings();

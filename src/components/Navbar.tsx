@@ -129,7 +129,7 @@ export default function Navbar({ user }: NavbarProps) {
         <div className="hidden md:flex gap-3.5 items-center">
           {/* Botão de Alternar Modo Dark / White */}
           <ThemeToggle />
-          {user && <NotificationsBell />}
+          <NotificationsBell />
 
           {user ? (
             <div className="flex items-center gap-3">
@@ -168,7 +168,7 @@ export default function Navbar({ user }: NavbarProps) {
         {/* Mobile Controls */}
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle />
-          {user && <NotificationsBell />}
+          <NotificationsBell />
 
           <Link
             href="/marcar"
@@ -284,6 +284,31 @@ export default function Navbar({ user }: NavbarProps) {
                 <span>⚙️ Dashboard do Barbeiro</span>
               </Link>
             )}
+
+            <button
+              onClick={async () => {
+                if (typeof window !== "undefined" && "Notification" in window) {
+                  try {
+                    const res = await Notification.requestPermission();
+                    if (res === "granted" && "serviceWorker" in navigator) {
+                      const reg = await navigator.serviceWorker.ready;
+                      reg.showNotification("Notificações Ativadas! 💈", {
+                        body: "Receberás avisos de novos cortes e vagas da Viegas Barber.",
+                        icon: "/icon-192.png",
+                        badge: "/icon-192.png",
+                      });
+                    }
+                  } catch {}
+                } else {
+                  alert("No iPhone: toca em Partilhar ⎋ > Adicionar ao Ecrã Principal para ativar notificações.");
+                }
+                closeMenu();
+              }}
+              className="p-2.5 rounded-xl flex items-center gap-2.5 text-left font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition"
+            >
+              <span>🔔</span>
+              <span>Ativar Notificações no Telemóvel</span>
+            </button>
           </div>
 
           <div

@@ -403,14 +403,11 @@ app.get("/api/appointments/availability", async (req, res) => {
 
     const appointments = await db.appointments().find({ date: dateStr, status: "SCHEDULED" }).toArray();
     const blocked = await db.blocked_times().find({ date: dateStr }).toArray();
-    const serviceDuration = Number(service.duration) || 45;
-    const baseDuration = (serviceDuration > 0 ? serviceDuration : 45) * (isDuo ? 2 : 1);
-    // Margem/pausa de 5 min por atendimento (45 min corte + 5 min pausa = 50 min no calendário)
-    const slotDuration = (baseDuration + (isDuo ? 10 : 5));
+    const slotDuration = 50 * (isDuo ? 2 : 1);
 
     const availableTimes = [];
-    // Cada corte tem 45 min + 5 min margem = 50 min. Avança de 50 em 50 minutos.
-    for (let mins = openMinutes; mins + slotDuration <= closeMinutes; mins += 50) {
+    // Cada corte tem 50 min. As vagas começam sempre na hora certa (09:00, 10:00, 11:00, 12:00, etc.)
+    for (let mins = openMinutes; mins + slotDuration <= closeMinutes; mins += 60) {
       const end = mins + slotDuration;
       // Only check lunch if the day closing is after lunch
       if (closeMinutes > lunchEnd && overlaps(mins, end, lunchStart, lunchEnd)) continue;
@@ -470,9 +467,7 @@ app.post("/api/appointments", async (req, res) => {
     }
 
     const startMins = timeToMinutes(startTime);
-    const serviceDuration = Number(service.duration) || 45;
-    // O corte tem ~45 min, no calendário bloqueia 50 min (45 min + 5 min de margem para o Diogo)
-    const slotDurationPerPerson = serviceDuration + 5;
+    const slotDurationPerPerson = 50;
     const totalSlotDuration = slotDurationPerPerson * (isDuo ? 2 : 1);
     const endMins = startMins + totalSlotDuration;
     const endTime = minutesToTime(endMins);
