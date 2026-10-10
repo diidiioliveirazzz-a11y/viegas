@@ -54,6 +54,20 @@ function loyaltyTierForVisits(visits) {
   return "Bronze";
 }
 
+function isNighttimeBlocked(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ,
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(now);
+  const hourPart = parts.find((p) => p.type === "hour");
+  const hour = hourPart ? parseInt(hourPart.value, 10) : now.getHours();
+  return hour >= 1 && hour < 8;
+}
+
+const NIGHTTIME_BLOCK_MESSAGE =
+  "🌙 As marcações estão em pausa durante a madrugada (01:00 às 08:00). A agenda reabre às 08:00 da manhã!";
+
 function todayDate(now = new Date()) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ,
@@ -65,10 +79,9 @@ function todayDate(now = new Date()) {
   return `${values.get("year")}-${values.get("month")}-${values.get("day")}`;
 }
 
-function maxBookableDate(isVip, now = new Date()) {
+function maxBookableDate(_isVip, now = new Date()) {
   const [year, month, day] = todayDate(now).split("-").map(Number);
-  const daysAhead = isVip ? 8 : 7;
-  return new Date(Date.UTC(year, month - 1, day + daysAhead)).toISOString().slice(0, 10);
+  return new Date(Date.UTC(year, month - 1, day + 30)).toISOString().slice(0, 10);
 }
 
 function isDateWithinBookingWindow(date, isVip, now = new Date()) {
@@ -78,7 +91,7 @@ function isDateWithinBookingWindow(date, isVip, now = new Date()) {
 }
 
 function bookingWindowMessage() {
-  return "A agenda está aberta até 7 dias para clientes regulares e até 8 dias para clientes VIP.";
+  return "A data selecionada está fora do período disponível para marcações.";
 }
 
 function timeToMinutes(value) {
@@ -191,6 +204,8 @@ module.exports = {
   normalizeInstagramHandle,
   instagramLoginEmail,
   loyaltyTierForVisits,
+  isNighttimeBlocked,
+  NIGHTTIME_BLOCK_MESSAGE,
   todayDate,
   maxBookableDate,
   isDateWithinBookingWindow,

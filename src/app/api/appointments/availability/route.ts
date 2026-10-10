@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { authOptions } from "@/lib/auth";
 import { loyaltyTierForVisits } from "@/lib/loyalty";
-import { getBookingWindowMessage, isDateWithinBookingWindow } from "@/lib/booking-window";
+import {
+  getBookingWindowMessage,
+  isDateWithinBookingWindow,
+  isNighttimeBookingBlocked,
+  NIGHTTIME_BLOCK_MESSAGE,
+} from "@/lib/booking-window";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -17,6 +22,7 @@ export async function GET(req: Request) {
   }
 
   try {
+    const isNightBlocked = isNighttimeBookingBlocked();
     const session = await getServerSession(authOptions);
     const loyalty = session?.user?.id
       ? await prisma.loyalty.findUnique({
@@ -49,10 +55,8 @@ export async function GET(req: Request) {
     const lunchEndMinutes = lunchEndH * 60 + lunchEndM;
 
     const selectedDate = new Date(`${dateStr}T00:00:00.000Z`);
-
     const now = new Date();
-    const minAdvanceMs = (settings.minAdvanceHours || 8) * 60 * 60 * 1000;
-    const earliestAllowedTime = new Date(now.getTime() + minAdvanceMs);
+    const earliestAllowedTime = now;
 
     // Marcações existentes para este dia
     const appointments = await prisma.appointment.findMany({
@@ -129,8 +133,10 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      availableTimes: availableSlots,
-      minAdvanceHours: settings.minAdvanceHours,
+      availableTimes: isNightBlocked ? [] : availableSlots,
+      isNightBlocked,
+      nightMessage: isNightBlocked ? NIGHTTIME_BLOCK_MESSAGE : null,
+      minAdvanceHours: 0,
     });
   } catch (error) {
     console.error("[GET /api/appointments/availability]", error);

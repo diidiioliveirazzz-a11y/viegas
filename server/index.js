@@ -14,6 +14,8 @@ const {
   maxBookableDate,
   isDateWithinBookingWindow,
   bookingWindowMessage,
+  isNighttimeBlocked,
+  NIGHTTIME_BLOCK_MESSAGE,
   timeToMinutes,
   minutesToTime,
   normalizeText,
@@ -460,8 +462,8 @@ app.get("/api/appointments/availability", async (req, res) => {
     const closeMinutes = timeToMinutes(daySched.close);
     const lunchStart = timeToMinutes(settings.lunchStart);
     const lunchEnd = timeToMinutes(settings.lunchEnd);
-    const minHours = typeof settings.minAdvanceHours === "number" ? settings.minAdvanceHours : 4;
-    const earliest = Date.now() + minHours * 60 * 60 * 1000;
+    const earliest = Date.now();
+    const isNight = isNighttimeBlocked();
 
     const appointments = await db.appointments().find({ date: dateStr, status: "SCHEDULED" }).toArray();
     const blocked = await db.blocked_times().find({ date: dateStr }).toArray();
@@ -481,7 +483,14 @@ app.get("/api/appointments/availability", async (req, res) => {
       if (!busy) availableTimes.push(startStr);
     }
 
-    res.json({ availableTimes, maxDate: maxBookableDate(isVip), today: todayDate(), schedule: daySched });
+    res.json({
+      availableTimes: isNight ? [] : availableTimes,
+      isNightBlocked: isNight,
+      nightMessage: isNight ? NIGHTTIME_BLOCK_MESSAGE : null,
+      maxDate: maxBookableDate(isVip),
+      today: todayDate(),
+      schedule: daySched,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro ao carregar horários" });
@@ -490,6 +499,10 @@ app.get("/api/appointments/availability", async (req, res) => {
 
 app.post("/api/appointments", async (req, res) => {
   try {
+    if (isNighttimeBlocked()) {
+      return res.status(400).json({ error: NIGHTTIME_BLOCK_MESSAGE });
+    }
+
     const body = req.body || {};
     const serviceId = body.serviceId;
     const date = body.date;
@@ -534,7 +547,6 @@ app.post("/api/appointments", async (req, res) => {
     const endMins = startMins + totalSlotDuration;
     const endTime = minutesToTime(endMins);
     const settings = await getSettings();
-    const minHours = settings.minAdvanceHours ?? 4;
     const slotMs = new Date(`${date}T${startTime}:00`).getTime();
 
     const openMinutes = timeToMinutes(daySched.open);
@@ -549,8 +561,8 @@ app.post("/api/appointments", async (req, res) => {
       return res.status(400).json({ error: `Horário indisponível. Horário à ${daySched.label}: ${daySched.open} às ${daySched.close}.` });
     }
 
-    if (slotMs < Date.now() + minHours * 60 * 60 * 1000) {
-      return res.status(400).json({ error: `As marcações têm de ser feitas com pelo menos ${minHours} horas de antecedência.` });
+    if (slotMs < Date.now()) {
+      return res.status(400).json({ error: "Este horário já passou. Por favor escolhe um horário futuro." });
     }
 
     // Check collision with existing appointments or blocked times

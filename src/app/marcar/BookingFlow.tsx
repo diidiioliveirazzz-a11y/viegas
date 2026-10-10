@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
-import { getMaxBookableDate, getTodayBookingDate } from "@/lib/booking-window";
+import {
+  getMaxBookableDate,
+  getTodayBookingDate,
+  isNighttimeBookingBlocked,
+  NIGHTTIME_BLOCK_MESSAGE,
+} from "@/lib/booking-window";
 
 type Service = {
   id: string;
@@ -40,6 +45,7 @@ export default function BookingFlow({ services, initialUser, isVip }: BookingFlo
   const [error, setError] = useState("");
   const [bookedSuccess, setBookedSuccess] = useState(false);
   const [coveredByPlan, setCoveredByPlan] = useState(false);
+  const [isNightBlocked, setIsNightBlocked] = useState(false);
 
   // Guest inputs
   const [guestName, setGuestName] = useState(initialUser?.name || "");
@@ -62,8 +68,14 @@ export default function BookingFlow({ services, initialUser, isVip }: BookingFlo
       fetch(`/api/appointments/availability?date=${selectedDate}&serviceId=${selectedService.id}&duo=${isDuo}`)
         .then((res) => res.json())
         .then((data) => {
+          if (data.isNightBlocked) {
+            setIsNightBlocked(true);
+            setError(data.nightMessage || NIGHTTIME_BLOCK_MESSAGE);
+          } else {
+            setIsNightBlocked(false);
+          }
           if (data.availableTimes) setAvailableTimes(data.availableTimes);
-          if (data.error) setError(data.error);
+          if (data.error && !data.isNightBlocked) setError(data.error);
         })
         .catch(() => setError("Erro ao carregar horários"))
         .finally(() => setLoadingTimes(false));
@@ -346,7 +358,7 @@ export default function BookingFlow({ services, initialUser, isVip }: BookingFlo
             </button>
             <h2 className="text-2xl font-black mb-2">Qual o melhor dia?</h2>
             <p className={`text-xs mb-6 ${isDark ? "text-zinc-400" : "text-slate-500"}`}>
-              A agenda abre até 7 dias para clientes regulares{isVip ? " e até 8 dias para membros VIP" : ""}. Seleciona o dia pretendido para veres os horários livres com o Diogo.
+              Seleciona o dia pretendido para veres os horários livres com o Diogo.
             </p>
 
             <input
@@ -411,6 +423,20 @@ export default function BookingFlow({ services, initialUser, isVip }: BookingFlo
                   A verificar a agenda do Diogo em tempo real...
                 </p>
               </div>
+            ) : isNightBlocked ? (
+              <div
+                className={`py-10 text-center space-y-4 rounded-2xl border p-6 ${
+                  isDark ? "bg-amber-950/40 border-amber-800/60" : "bg-amber-50 border-amber-200"
+                }`}
+              >
+                <div className="text-3xl">🌙</div>
+                <p className="text-sm font-bold text-amber-300">
+                  Marcações em Pausa Noturna (01:00 às 08:00)
+                </p>
+                <p className={`text-xs max-w-sm mx-auto ${isDark ? "text-zinc-300" : "text-slate-600"}`}>
+                  Para garantirmos a melhor organização na cadeira do Diogo, a agenda encerra durante a madrugada e reabre às 08:00 da manhã.
+                </p>
+              </div>
             ) : availableTimes.length === 0 ? (
               <div
                 className={`py-10 text-center space-y-4 rounded-2xl border p-6 ${
@@ -421,7 +447,7 @@ export default function BookingFlow({ services, initialUser, isVip }: BookingFlo
                   Não existem horários livres disponíveis para este dia.
                 </p>
                 <p className={`text-xs ${isDark ? "text-zinc-500" : "text-slate-500"}`}>
-                  Para hoje os horários imediatos podem estar fechados pela antecedência configurada. Experimenta selecionar amanhã ou entrar na lista de espera!
+                  Todos os horários para este dia já foram reservados. Experimenta selecionar outro dia ou entrar na lista de espera!
                 </p>
 
                 {waitlistSuccess ? (

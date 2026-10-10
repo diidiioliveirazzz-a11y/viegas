@@ -6,10 +6,19 @@ import bcrypt from "bcryptjs";
 import { getSettings } from "@/lib/settings";
 import { randomUUID } from "crypto";
 import { loyaltyTierForVisits } from "@/lib/loyalty";
-import { getBookingWindowMessage, isDateWithinBookingWindow } from "@/lib/booking-window";
+import {
+  getBookingWindowMessage,
+  isDateWithinBookingWindow,
+  isNighttimeBookingBlocked,
+  NIGHTTIME_BLOCK_MESSAGE,
+} from "@/lib/booking-window";
 
 export async function POST(req: Request) {
   try {
+    if (isNighttimeBookingBlocked()) {
+      return NextResponse.json({ error: NIGHTTIME_BLOCK_MESSAGE }, { status: 400 });
+    }
+
     const session = await getServerSession(authOptions);
     const body = await req.json();
     const serviceId = body.serviceId;
@@ -97,14 +106,13 @@ export async function POST(req: Request) {
     const lunchStart = Number(settings.lunchStart.slice(0, 2)) * 60 + Number(settings.lunchStart.slice(3));
     const lunchEnd = Number(settings.lunchEnd.slice(0, 2)) * 60 + Number(settings.lunchEnd.slice(3));
     const localSlotDate = new Date(`${date}T${startTime}:00`);
-    const earliestAllowed = Date.now() + settings.minAdvanceHours * 60 * 60 * 1000;
 
     if (
       !Number.isFinite(localSlotDate.getTime()) ||
       startMins < openMinutes ||
       endMins > closeMinutes ||
       (startMins < lunchEnd && endMins > lunchStart) ||
-      localSlotDate.getTime() < earliestAllowed
+      localSlotDate.getTime() < Date.now()
     ) {
       return NextResponse.json({ error: "Este horário está fora do período de marcação disponível." }, { status: 400 });
     }

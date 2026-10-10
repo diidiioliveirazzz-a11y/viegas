@@ -6,7 +6,6 @@ import ReviewsSection from "@/components/ReviewsSection";
 import VirtualAssistant from "@/components/VirtualAssistant";
 import Navbar from "@/components/Navbar";
 import HeroBackground from "@/components/HeroBackground";
-import FlashDropBanner from "@/components/FlashDropBanner";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -72,11 +71,8 @@ export default async function Home() {
             </Link>
           </div>
 
-          {/* Flash Drop de Vagas */}
-          <FlashDropBanner />
-
           {/* Banner de Próxima Disponibilidade & Antecedência */}
-          <div className="hero-availability mt-6 max-w-xl mx-auto p-4 rounded-2xl flex items-center justify-between text-xs shadow-sm">
+          <div className="hero-availability mt-14 max-w-xl mx-auto p-4 rounded-2xl flex items-center justify-between text-xs shadow-sm">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Agenda aberta para os próximos dias</span>

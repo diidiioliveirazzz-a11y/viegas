@@ -1,5 +1,20 @@
 const BOOKING_TIME_ZONE = "Europe/Lisbon";
 
+export function isNighttimeBookingBlocked(now = new Date()): boolean {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: BOOKING_TIME_ZONE,
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(now);
+  const hourPart = parts.find((p) => p.type === "hour");
+  const hour = hourPart ? parseInt(hourPart.value, 10) : now.getHours();
+  // Bloqueado da 01:00 às 08:00 (1 <= hour < 8)
+  return hour >= 1 && hour < 8;
+}
+
+export const NIGHTTIME_BLOCK_MESSAGE =
+  "🌙 As marcações estão em pausa durante a madrugada (01:00 às 08:00). A agenda reabre às 08:00 da manhã!";
+
 function getCurrentBookingDate(now: Date): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: BOOKING_TIME_ZONE,
@@ -15,15 +30,15 @@ function getCurrentBookingDate(now: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getMaxBookableDate(isVip: boolean, now = new Date()): string {
+export function getMaxBookableDate(_isVip = false, now = new Date()): string {
   const [year, month, day] = getCurrentBookingDate(now).split("-").map(Number);
-  const daysAhead = isVip ? 8 : 7;
-  return new Date(Date.UTC(year, month - 1, day + daysAhead)).toISOString().slice(0, 10);
+  // Agenda aberta até 30 dias para todos
+  return new Date(Date.UTC(year, month - 1, day + 30)).toISOString().slice(0, 10);
 }
 
 export function isDateWithinBookingWindow(
   date: string,
-  isVip: boolean,
+  isVip = false,
   now = new Date()
 ): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
@@ -41,5 +56,5 @@ export function getTodayBookingDate(now = new Date()): string {
 }
 
 export function getBookingWindowMessage(): string {
-  return "A agenda está aberta até 7 dias para clientes regulares e até 8 dias para clientes VIP.";
+  return "A data selecionada está fora do período disponível para marcações.";
 }

@@ -751,21 +751,7 @@ const VB = (() => {
             <h1 class="hero-title">VIEGAS BARBER</h1>
             <p class="hero-tag">“Mais que um corte.”</p>
             <p class="hero-description">Atendimento individual, degradês milimétricos e um ambiente desenhado para o teu momento. Sem esperas desnecessárias, com marcação rápida e precisa.</p>
-            <a class="brand-button btn" href="/marcar" style="padding:1rem 2rem">MARCAR AGORA</a>
-            <div class="flash-drop-container" style="text-align:left;margin-top:1.5rem">
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
-                <div>
-                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem">
-                    <span style="background:#dc2626;color:#fff;font-size:0.65rem;font-weight:900;letter-spacing:0.1em;padding:0.2rem 0.5rem;border-radius:0.3rem">⚡ FLASH DROP</span>
-                    <span style="font-family:monospace;font-size:0.72rem;color:var(--muted)">EXPIRA EM: <strong style="color:#fff" id="flash-drop-timer">18:42</strong></span>
-                  </div>
-                  <strong style="display:block;font-size:0.95rem;color:#fff;text-transform:uppercase">Vaga Relâmpago Libertada • 1 Cadeira Hoje</strong>
-                  <p style="margin:0.2rem 0 0;font-size:0.75rem;color:var(--muted)">Horário livre de última hora na cadeira do Diogo. Primeiro a confirmar fica com ela.</p>
-                </div>
-                <a href="/marcar" class="brand-button btn" style="font-weight:900;font-size:0.75rem;padding:0.7rem 1.2rem;border-radius:0.75rem;white-space:nowrap">AGARRAR O DROP ⚡</a>
-              </div>
-            </div>
-            <div class="hero-availability" style="margin-top:1rem"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:#f87171;font-weight:700">Ver vagas livres →</a></div>
+            <div class="hero-availability" style="margin-top:1.5rem"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:#f87171;font-weight:700">Ver vagas livres →</a></div>
             <div class="radar-box" style="margin:0.75rem auto 0;max-width:36rem;text-align:left">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
                 <div style="display:flex;align-items:center;gap:0.5rem">
@@ -883,25 +869,6 @@ const VB = (() => {
       i = (i + 1) % els.length;
       els[i].classList.add("is-active");
     }, 6000);
-
-    // Flash Drop Timer
-    let dropMin = 18;
-    let dropSec = 42;
-    const dropTimerEl = document.getElementById("flash-drop-timer");
-    if (dropTimerEl) {
-      setInterval(() => {
-        if (dropSec > 0) {
-          dropSec--;
-        } else if (dropMin > 0) {
-          dropMin--;
-          dropSec = 59;
-        } else {
-          dropMin = 25;
-          dropSec = 0;
-        }
-        dropTimerEl.textContent = `${dropMin.toString().padStart(2, "0")}:${dropSec.toString().padStart(2, "0")}`;
-      }, 1000);
-    }
   }
 
   async function pageDiogo() {
@@ -1191,7 +1158,7 @@ const VB = (() => {
           <div class="booking-header">
             <span class="eyebrow">Agendamento Exclusivo</span>
             <h1 class="h2" style="margin:.2rem 0">Marcar com Diogo Viegas</h1>
-            <p class="muted" style="font-size:.85rem">Marcações abertas com pelo menos 4 horas de antecedência.</p>
+            <p class="muted" style="font-size:.85rem">Atendimento exclusivo com hora marcada na cadeira do Diogo.</p>
           </div>
 
           <div class="booking-steps-bar">
@@ -1317,7 +1284,7 @@ const VB = (() => {
             <div>
               <label style="font-weight:700;display:flex;justify-content:space-between;align-items:center">
                 <span>📅 Data do Corte</span>
-                <span class="muted" style="font-size:.72rem">Seg — Sáb | Min. 4h antecedência</span>
+                <span class="muted" style="font-size:.72rem">Seg — Sáb</span>
               </label>
               <input type="date" id="date" value="${state.date}" min="${todayStr}" style="padding:.9rem 1rem;font-size:1rem;font-weight:700">
             </div>
@@ -1405,7 +1372,7 @@ const VB = (() => {
         box.innerHTML = `
           <div style="margin-bottom:1.2rem">
             <h2 class="h2" style="font-size:1.4rem;margin:0 0 .3rem">3. Escolhe a Hora</h2>
-            <p class="muted" style="font-size:.85rem">Data: <strong>${state.date}</strong> • Mínimo de 4h de antecedência</p>
+            <p class="muted" style="font-size:.85rem">Data: <strong>${state.date}</strong></p>
           </div>
           <div id="slots-area" style="min-height:12rem">
             <div style="text-align:center;padding:2.5rem 0"><p class="muted">A carregar horários disponíveis com o Diogo...</p></div>
@@ -1434,13 +1401,28 @@ const VB = (() => {
           const times = data.availableTimes || [];
           const area = document.getElementById("slots-area");
 
+          if (data.isNightBlocked) {
+            area.innerHTML = `
+              <div style="text-align:center;padding:2.5rem 1rem;background:rgba(234,179,8,.08);border-radius:.9rem;border:1px dashed rgba(234,179,8,.35)">
+                <div style="font-size:2rem;margin-bottom:.5rem">🌙</div>
+                <h4 style="margin:0 0 .4rem;font-size:1.1rem;color:#facc15">Marcações em Pausa Noturna (01:00 às 08:00)</h4>
+                <p class="muted" style="font-size:.85rem;max-width:26rem;margin:0 auto 1.2rem;line-height:1.5">
+                  Para mantermos a melhor organização na cadeira do Diogo, o agendamento encerra de madrugada e reabre às 08:00 da manhã.
+                </p>
+                <div style="display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap">
+                  <a class="brand-button btn" href="/">Voltar à Página Principal</a>
+                </div>
+              </div>`;
+            return;
+          }
+
           if (!times.length) {
             area.innerHTML = `
               <div style="text-align:center;padding:2.5rem 1rem;background:rgba(239,68,68,.04);border-radius:.9rem;border:1px dashed var(--card-border)">
                 <div style="font-size:2rem;margin-bottom:.5rem">⏰</div>
                 <h4 style="margin:0 0 .4rem;font-size:1.1rem">Sem vagas disponíveis para este dia</h4>
                 <p class="muted" style="font-size:.85rem;max-width:24rem;margin:0 auto 1.2rem">
-                  ${data.message || "Todos os horários estão ocupados ou não cumprem a antecedência mínima de 4 horas."}
+                  ${data.message || "Todos os horários para este dia já se encontram preenchidos. Experimenta outro dia ou entra na lista de espera."}
                 </p>
                 <div style="display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap">
                   <button class="brand-button btn" id="change-date-btn">Mudar de Data</button>
