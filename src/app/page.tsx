@@ -7,7 +7,6 @@ import VirtualAssistant from "@/components/VirtualAssistant";
 import Navbar from "@/components/Navbar";
 import HeroBackground from "@/components/HeroBackground";
 import FlashDropBanner from "@/components/FlashDropBanner";
-import BarberBeatMachine from "@/components/BarberBeatMachine";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -272,9 +271,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* Beat Machine da Barbearia */}
-      <BarberBeatMachine />
 
       {/* Secção de Avaliações */}
       <ReviewsSection />
