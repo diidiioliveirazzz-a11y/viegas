@@ -19,7 +19,7 @@ async function seed() {
       address: "Centro comercial São Julião , Setúbal",
       phone: "+351 939 504 261",
       whatsapp: "+351 939 504 261",
-      instagram: "viegas_barber",
+      instagram: "v_barber8",
       schedule: WEEK_SCHEDULE,
     });
     console.log("[NoSQL Seed] Definições padrão criadas com horário semanal.");

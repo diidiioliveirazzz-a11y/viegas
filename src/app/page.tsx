@@ -362,7 +362,7 @@ export default async function Home() {
           <div className="space-y-2">
             <h4 className="text-slate-900 dark:text-white font-bold text-sm">Contacto</h4>
             <p>{setting?.phone || "+351 939 504 261"}</p>
-            <p className="text-pink-600 dark:text-sky-400 font-bold">Instagram: @viegas_barber</p>
+            <p className="text-pink-600 dark:text-sky-400 font-bold">Instagram: @v_barber8</p>
           </div>
         </div>
 

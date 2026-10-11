@@ -217,7 +217,7 @@ export async function POST(req: Request) {
       norm.includes("fica")
     ) {
       return NextResponse.json({
-        reply: `📍 **Localização & Contactos:**\n\n• **Morada:** ${settings.address}\n• **Telefone / WhatsApp:** ${settings.phone}\n• **Instagram Oficial:** @viegasbarber\n\nEstamos situados numa zona de fácil acesso e estacionamento em Lisboa.`,
+        reply: `📍 **Localização & Contactos:**\n\n• **Morada:** ${settings.address}\n• **Telefone / WhatsApp:** ${settings.phone}\n• **Instagram Oficial:** @v_barber8\n\nEstamos situados no Centro comercial São Julião em Setúbal.`,
       });
     }
 

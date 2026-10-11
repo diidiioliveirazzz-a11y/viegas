@@ -105,7 +105,7 @@ const VB = (() => {
             <p>Sábado: 09:00 — 12:00</p>
             <p style="color:var(--accent);font-weight:700">Domingo: Encerrado</p>
           </div>
-          <div><h4>Contacto & WhatsApp</h4><p>${phone}</p><p style="color:var(--accent);font-weight:700"><a href="https://instagram.com/viegas_barber" target="_blank" rel="noopener" style="color:inherit">Instagram: @viegas_barber</a></p></div>
+          <div><h4>Contacto & WhatsApp</h4><p>${phone}</p><p style="color:var(--accent);font-weight:700"><a href="https://instagram.com/v_barber8" target="_blank" rel="noopener" style="color:inherit">Instagram: @v_barber8</a></p></div>
         </div>
         <div class="wrap" style="border-top:1px solid var(--card-border);padding-top:1.5rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap">
           <p>© ${new Date().getFullYear()} Viegas Barber. Todos os direitos reservados.</p>

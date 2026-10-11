@@ -31,6 +31,7 @@ const {
 } = require("./lib");
 const { sendWhatsAppMessage } = require("./whatsapp");
 const webpush = require("web-push");
+const NoSQLSessionStore = require("./session-store");
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "BEvtzUzhSofKx53OVg2gTvRYsdm_5E_xuUYB0VsoHedPcWBVVi13jgCenuiZU4NdXsDudtp9UH691RhiHCMuM3Q";
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "movji9uI68Tl1U1NKDbtTPRiQwTFgxCkSMkBCAc2SWY";
@@ -48,9 +49,16 @@ app.use(
   session({
     name: "viegas.sid",
     secret: process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET || "viegas-barber-secret-2026",
+    store: new NoSQLSessionStore({ ttl: SESSION_MAX_AGE }),
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: SESSION_MAX_AGE, httpOnly: true, sameSite: "lax" },
+    rolling: true,
+    cookie: {
+      maxAge: SESSION_MAX_AGE,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false, // works seamlessly on both http and https/proxies
+    },
   })
 );
 
@@ -90,7 +98,7 @@ async function getSettings() {
     address: settings?.address || "Centro comercial São Julião , Setúbal",
     phone: settings?.phone || "+351 939 504 261",
     whatsapp: settings?.whatsapp || "+351 939 504 261",
-    instagram: settings?.instagram || "viegas_barber",
+    instagram: settings?.instagram || "v_barber8",
     schedule: settings?.schedule || WEEK_SCHEDULE,
     openTime: settings?.openTime || "09:00",
     closeTime: settings?.closeTime || "19:00",
@@ -1101,9 +1109,9 @@ app.post("/api/assistant", async (req, res) => {
     });
   }
 
-  if (norm.includes("morada") || norm.includes("localizacao") || norm.includes("onde") || norm.includes("contacto") || norm.includes("fica") || norm.includes("rua") || norm.includes("setubal")) {
+  if (norm.includes("morada") || norm.includes("localizacao") || norm.includes("onde") || norm.includes("contacto") || norm.includes("fica") || norm.includes("rua") || norm.includes("setubal") || norm.includes("instagram")) {
     return res.json({
-      reply: `📍 **Localização & Contactos:**\n\n• **Morada**: ${settings.address || "Centro comercial São Julião, Setúbal"}\n• **WhatsApp**: ${settings.whatsapp || settings.phone || "+351 939 504 261"}\n• **Instagram**: @viegas_barber\n\nAtendimento exclusivo e individual com o Diogo Viegas em Setúbal.`,
+      reply: `📍 **Localização & Contactos:**\n\n• **Morada**: ${settings.address || "Centro comercial São Julião, Setúbal"}\n• **WhatsApp**: ${settings.whatsapp || settings.phone || "+351 939 504 261"}\n• **Instagram**: @v_barber8\n\nAtendimento exclusivo e individual com o Diogo Viegas em Setúbal.`,
     });
   }
 
@@ -1578,7 +1586,7 @@ async function start() {
       $set: {
         phone: "+351 939 504 261",
         whatsapp: "+351 939 504 261",
-        instagram: "viegas_barber",
+        instagram: "v_barber8",
         minAdvanceHours: 4,
         lunchStart: "13:00",
         lunchEnd: "13:30",
