@@ -751,12 +751,12 @@ const VB = (() => {
             <h1 class="hero-title">VIEGAS BARBER</h1>
             <p class="hero-tag">“Mais que um corte.”</p>
             <p class="hero-description">Atendimento individual, degradês milimétricos e um ambiente desenhado para o teu momento. Sem esperas desnecessárias, com marcação rápida e precisa.</p>
-            <div class="hero-availability" style="margin-top:1.5rem"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:#f87171;font-weight:700">Ver vagas livres →</a></div>
+            <div class="hero-availability" style="margin-top:1.5rem"><div style="display:flex;gap:.5rem;align-items:center"><span class="pulse"></span> Agenda aberta para os próximos dias</div><a href="/marcar" style="color:var(--accent);font-weight:700">Ver vagas livres →</a></div>
             <div class="radar-box" style="margin:0.75rem auto 0;max-width:36rem;text-align:left">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
                 <div style="display:flex;align-items:center;gap:0.5rem">
                   <span class="radar-ping-dot"></span>
-                  <span style="font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#faf8f8">RADAR DE VAGAS EM TEMPO REAL</span>
+                  <span style="font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--foreground,#faf8f8)">RADAR DE VAGAS EM TEMPO REAL</span>
                 </div>
                 <span class="radar-badge-live">AO VIVO</span>
               </div>
@@ -791,9 +791,9 @@ const VB = (() => {
                   return cards.join("");
                 })()}
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;padding-top:0.65rem;border-top:1px solid rgba(255,255,255,0.08);font-size:0.7rem">
-                <span style="color:var(--muted,#a1a1aa)">⚡ Atendimento individual sem esperas</span>
-                <a href="/marcar" style="color:#f87171;font-weight:700;text-decoration:none">Escolher Horário →</a>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;padding-top:0.65rem;border-top:1px solid var(--card-border);font-size:0.72rem;flex-wrap:wrap;gap:0.4rem">
+                <span style="color:var(--muted)">⚡ Atendimento individual sem esperas</span>
+                <a href="/marcar" style="color:var(--accent);font-weight:700;text-decoration:none">Escolher Horário →</a>
               </div>
             </div>
           </div>
