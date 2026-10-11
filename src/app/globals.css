@@ -3,33 +3,33 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #090909;
-  --foreground: #faf8f8;
-  --card-bg: #141111;
-  --card-border: #302020;
-  --accent-color: #ef4444;
-  --accent-hover: #dc2626;
-  --accent-glow: rgba(239, 68, 68, 0.24);
+  --background: #0c0b0a;
+  --foreground: #f6f3ee;
+  --card-bg: #171513;
+  --card-border: #2c2621;
+  --accent-color: #d97706;
+  --accent-hover: #b45309;
+  --accent-glow: rgba(217, 119, 6, 0.26);
 }
 
 html.light {
-  --background: #fffafb;
-  --foreground: #191214;
+  --background: #fbf8f3;
+  --foreground: #2a1f18;
   --card-bg: #ffffff;
-  --card-border: #f1dfe3;
-  --accent-color: #dc2626;
-  --accent-hover: #be123c;
-  --accent-glow: rgba(220, 38, 38, 0.14);
+  --card-border: #e9e0d4;
+  --accent-color: #96532b;
+  --accent-hover: #7b411f;
+  --accent-glow: rgba(150, 83, 43, 0.2);
 }
 
 html.dark {
-  --background: #090909;
-  --foreground: #faf8f8;
-  --card-bg: #141111;
-  --card-border: #302020;
-  --accent-color: #ef4444;
-  --accent-hover: #dc2626;
-  --accent-glow: rgba(239, 68, 68, 0.24);
+  --background: #0c0b0a;
+  --foreground: #f6f3ee;
+  --card-bg: #171513;
+  --card-border: #2c2621;
+  --accent-color: #d97706;
+  --accent-hover: #b45309;
+  --accent-glow: rgba(217, 119, 6, 0.26);
 }
 
 @theme inline {

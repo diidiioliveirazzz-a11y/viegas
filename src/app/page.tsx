@@ -54,7 +54,7 @@ export default async function Home() {
             VIEGAS BARBER
           </h1>
 
-          <p className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide mb-3 sm:mb-6 text-red-600 dark:text-red-400">
+          <p className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide mb-3 sm:mb-6 text-[#96532b] dark:text-[#fbbf24]">
             “Mais que um corte.”
           </p>
 
@@ -77,7 +77,7 @@ export default async function Home() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Agenda aberta para os próximos dias</span>
             </div>
-            <Link href="/marcar" className="font-bold text-red-600 hover:underline dark:text-red-400">
+            <Link href="/marcar" className="font-bold text-[#96532b] hover:underline dark:text-[#fbbf24]">
               Ver vagas livres →
             </Link>
           </div>
@@ -132,7 +132,7 @@ export default async function Home() {
 
             <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between items-center text-[10px] sm:text-[11px]">
               <span className="text-zinc-400">⚡ Atendimento individual sem esperas</span>
-              <Link href="/marcar" className="font-bold text-red-500 hover:text-red-400 transition">
+              <Link href="/marcar" className="font-bold text-[#b86b3b] hover:text-[#96532b] dark:text-[#fbbf24] dark:hover:text-[#f59e0b] transition">
                 Escolher Horário →
               </Link>
             </div>
@@ -141,11 +141,11 @@ export default async function Home() {
       </section>
 
       {/* Destaque Diogo Viegas */}
-      <section className="py-20 bg-slate-100/60 dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-900">
+      <section className="py-20 bg-[#f5ede1]/60 dark:bg-[#12100e] border-t border-[#e9e0d4] dark:border-[#2c2621]">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 grid md:grid-cols-12 gap-8 items-center shadow-sm">
+          <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#171513] border border-[#e9e0d4] dark:border-[#2c2621] grid md:grid-cols-12 gap-8 items-center shadow-sm">
             <div className="md:col-span-4 flex justify-center">
-              <div className="w-56 h-72 rounded-2xl overflow-hidden border border-pink-200 dark:border-sky-400/40 shadow-md">
+              <div className="w-56 h-72 rounded-2xl overflow-hidden border border-[#e9e0d4] dark:border-[#2c2621] shadow-md">
                 <img
                   src="/img/diogo-viegas.jpg"
                   alt="Diogo Viegas"
@@ -154,23 +154,23 @@ export default async function Home() {
               </div>
             </div>
             <div className="md:col-span-8 space-y-4">
-              <span className="text-xs font-bold text-pink-600 dark:text-sky-400 uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#96532b] dark:text-[#fbbf24] uppercase tracking-widest">
                 O Teu Barbeiro
               </span>
               <h2 className="text-3xl md:text-4xl font-black">Conhece o Diogo Viegas</h2>
-              <p className="text-slate-600 dark:text-zinc-400 text-sm leading-relaxed">
-                Na Viegas Barber és atendido exclusivamente pelo Diogo. Sem rotação de cadeiras, sem surpresas no resultado.                 Foco total no detalhe, higiene rigorosa e técnicas modernas de fade e barboterapia.
+              <p className="text-[#786659] dark:text-[#a39b90] text-sm leading-relaxed">
+                Na Viegas Barber és atendido exclusivamente pelo Diogo. Sem rotação de cadeiras, sem surpresas no resultado. Foco total no detalhe, higiene rigorosa e técnicas modernas de fade e barboterapia.
               </p>
               <div className="pt-2 flex flex-wrap gap-4">
                 <Link
                   href="/diogo"
-                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-white rounded-xl text-xs font-bold transition"
+                  className="px-6 py-3 bg-[#fbf8f3] hover:bg-[#f5ede1] text-[#2a1f18] dark:bg-[#201d1a] dark:hover:bg-[#2a2622] dark:text-white rounded-xl text-xs font-bold transition border border-[#e9e0d4] dark:border-[#2c2621]"
                 >
                   Ver Perfil e Trabalhos do Diogo
                 </Link>
                 <Link
                   href="/marcar"
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-sky-400 hover:opacity-95 text-white dark:bg-sky-400 dark:bg-none dark:hover:bg-sky-300 dark:text-zinc-950 rounded-xl text-xs font-bold transition shadow-sm"
+                  className="brand-button px-6 py-3 rounded-xl text-xs font-bold transition shadow-sm"
                 >
                   Marcar com o Diogo
                 </Link>
@@ -183,37 +183,37 @@ export default async function Home() {
       {/* Serviços */}
       <section id="servicos" className="py-28 max-w-6xl mx-auto px-6">
         <div className="mb-14">
-          <span className="text-pink-600 dark:text-sky-400 font-bold text-xs uppercase tracking-widest">
+          <span className="text-[#96532b] dark:text-[#fbbf24] font-bold text-xs uppercase tracking-widest">
             Catálogo
           </span>
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mt-1 mb-3">
             SERVIÇOS DE EXCELÊNCIA
           </h2>
-          <div className="w-16 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-sky-400 dark:bg-sky-400 rounded-full"></div>
+          <div className="w-16 h-1 bg-gradient-to-r from-[#b86b3b] via-[#96532b] to-[#6a3418] dark:from-[#f59e0b] dark:to-[#d97706] rounded-full"></div>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => (
             <div
               key={service.id}
-              className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-pink-300 dark:hover:border-sky-400/50 transition flex flex-col justify-between shadow-sm group"
+              className="p-8 rounded-2xl bg-white dark:bg-[#171513] border border-[#e9e0d4] dark:border-[#2c2621] hover:border-[#96532b]/50 dark:hover:border-[#d97706]/50 transition flex flex-col justify-between shadow-sm group"
             >
               <div>
-                <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-sky-400 transition">
+                <h3 className="text-2xl font-bold mb-2 text-[#2a1f18] dark:text-white group-hover:text-[#96532b] dark:group-hover:text-[#fbbf24] transition">
                   {service.name}
                 </h3>
-                <p className="text-slate-600 dark:text-zinc-400 text-sm mb-8 leading-relaxed min-h-[50px]">
+                <p className="text-[#786659] dark:text-[#a39b90] text-sm mb-8 leading-relaxed min-h-[50px]">
                   {service.description}
                 </p>
               </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 flex justify-between items-baseline">
+              <div className="pt-4 border-t border-[#e9e0d4] dark:border-[#2c2621] flex justify-between items-baseline">
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-zinc-500 block">Preço</span>
-                  <span className="text-3xl font-black text-pink-600 dark:text-sky-400">
+                  <span className="text-xs text-[#786659] dark:text-[#a39b90] block">Preço</span>
+                  <span className="text-3xl font-black text-[#96532b] dark:text-[#fbbf24]">
                     {service.price.toFixed(2)}€
                   </span>
                 </div>
-                <span className="text-xs text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-950 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800">
+                <span className="text-xs text-[#786659] dark:text-[#a39b90] bg-[#fbf8f3] dark:bg-[#201d1a] px-3 py-1.5 rounded-lg border border-[#e9e0d4] dark:border-[#2c2621]">
                   ⏱ ~{service.duration} min
                 </span>
               </div>
@@ -340,16 +340,16 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8 mb-12">
           <div className="space-y-3">
             <h3 className="text-slate-900 dark:text-white font-black text-lg">
-              VIEGAS<span className="text-pink-600 dark:text-sky-400">.</span>BARBER
+              VIEGAS<span className="text-[#96532b] dark:text-[#d97706]">.</span>BARBER
             </h3>
             <p className="text-slate-500 dark:text-zinc-500">
-              Barbearia contemporânea e de alta precisão em Lisboa.
+              Barbearia contemporânea e de alta precisão em Setúbal.
             </p>
           </div>
 
           <div className="space-y-2">
             <h4 className="text-slate-900 dark:text-white font-bold text-sm">Localização</h4>
-            <p>{setting?.address || "Rua Principal, Lisboa"}</p>
+            <p>{setting?.address || "Centro comercial São Julião, Setúbal"}</p>
             <p>Portugal</p>
           </div>
 
@@ -362,7 +362,7 @@ export default async function Home() {
           <div className="space-y-2">
             <h4 className="text-slate-900 dark:text-white font-bold text-sm">Contacto</h4>
             <p>{setting?.phone || "+351 939 504 261"}</p>
-            <p className="text-pink-600 dark:text-sky-400 font-bold">Instagram: @v_barber8</p>
+            <p className="text-[#96532b] dark:text-[#fbbf24] font-bold">Instagram: @v_barber8</p>
           </div>
         </div>
 
