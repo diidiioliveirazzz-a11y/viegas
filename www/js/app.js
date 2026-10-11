@@ -1779,30 +1779,132 @@ const VB = (() => {
     ];
     let body = "";
     if (tab === "hoje" || tab === "agenda") {
-      const date = new URLSearchParams(location.search).get("date") || new Date().toISOString().slice(0, 10);
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const date = tab === "hoje" ? todayIso : (new URLSearchParams(location.search).get("date") || todayIso);
       const data = tab === "hoje" ? await api("/api/admin/today") : await api(`/api/admin/appointments?date=${date}`);
-      const rows = data.appointments || data;
-      body = `${tab === "agenda" ? `<input type="date" id="d" value="${date}">` : `<h2>Agenda ${data.date || date}</h2>`}
-        <table class="table"><tr><th>Hora</th><th>Cliente</th><th>Serviço</th><th>Estado</th><th>Ações</th></tr>
-        ${rows.map((a) => `<tr>
-          <td><strong>${a.start_time}</strong></td>
-          <td>
-            <strong>${a.client_name}</strong><br><span class="muted">${a.phone || a.email}</span>
-            ${a.whatsAppUrl ? `<br><a href="${a.whatsAppUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:.3rem;color:#22c55e;font-size:.85rem;font-weight:700;margin-top:.25rem;text-decoration:none">💬 WhatsApp</a>` : ""}
-          </td>
-          <td>${a.service_name}${a.is_silent ? " · 🤫 silêncio" : ""}${a.music_request ? " · ♪ " + a.music_request : ""}</td>
-          <td><span class="chip" style="position:static">${a.status}</span></td>
-          <td>
-            ${a.status === "SCHEDULED" ? `
-              <div style="display:flex;gap:.35rem;flex-wrap:wrap">
-                <button class="brand-button btn" style="padding:.3rem .6rem;font-size:.85rem" data-st="${a.id}:COMPLETED">Concluir</button>
-                <button class="btn-ghost btn" style="padding:.3rem .6rem;font-size:.85rem" data-st="${a.id}:NO_SHOW">Falta</button>
-                <button class="btn-ghost btn" style="padding:.3rem .6rem;font-size:.85rem;color:#ef4444" data-st="${a.id}:CANCELLED">Cancelar</button>
-              </div>` : ""}
-            ${a.status === "CANCELLED" ? `
-              <button class="brand-button btn" data-broadcast="${a.date}:${a.start_time}" style="font-size:.8rem;padding:.3rem .65rem;display:inline-flex;align-items:center;gap:.35rem" title="Avisar clientes registados e quem tem sininho ativado">⚡ Avisar Clientes da Vaga</button>` : ""}
-          </td>
-        </tr>`).join("")}</table>`;
+      const rows = data.appointments || (Array.isArray(data) ? data : []);
+
+      // Calculate Day Statistics
+      const scheduledCount = rows.filter((a) => a.status === "SCHEDULED").length;
+      const completedCount = rows.filter((a) => a.status === "COMPLETED").length;
+      const totalEstimated = rows
+        .filter((a) => a.status !== "CANCELLED")
+        .reduce((sum, a) => sum + (Number(a.price) || 12), 0);
+
+      // Date calculations for Prev/Next
+      const currD = new Date(date + "T00:00:00");
+      const prevD = new Date(currD);
+      prevD.setDate(currD.getDate() - 1);
+      const nextD = new Date(currD);
+      nextD.setDate(currD.getDate() + 1);
+      const prevStr = prevD.toISOString().slice(0, 10);
+      const nextStr = nextD.toISOString().slice(0, 10);
+
+      const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+      const dayName = dayNames[currD.getDay()];
+      const isToday = date === todayIso;
+
+      body = `
+        <div class="agenda-shell">
+          <div class="agenda-header">
+            <div class="agenda-title-box">
+              <h2>${tab === "hoje" ? "📅 Agenda de Hoje" : "🗓️ Agenda Diária"} ${isToday ? `<span class="radar-badge-live" style="font-size:.65rem;margin-left:.35rem">HOJE</span>` : ""}</h2>
+              <p>${dayName}, ${date.split("-").reverse().join("/")}</p>
+            </div>
+            <div class="agenda-date-nav">
+              <button type="button" class="agenda-date-btn" data-nav-date="${prevStr}" title="Dia anterior">◀</button>
+              <input type="date" id="d" value="${date}" title="Mudar dia da agenda">
+              <button type="button" class="agenda-date-btn" data-nav-date="${nextStr}" title="Dia seguinte">▶</button>
+              ${!isToday ? `<button type="button" class="btn btn-ghost" data-nav-date="${todayIso}" style="padding:.25rem .6rem;font-size:.75rem;margin-left:.25rem">Ir para Hoje</button>` : ""}
+            </div>
+          </div>
+
+          <div class="agenda-stats-bar">
+            <div class="agenda-stat-card">
+              <span class="agenda-stat-label">Total Agendados</span>
+              <span class="agenda-stat-value" style="color:var(--accent)">${scheduledCount}</span>
+            </div>
+            <div class="agenda-stat-card">
+              <span class="agenda-stat-label">Cortes Concluídos</span>
+              <span class="agenda-stat-value" style="color:#22c55e">${completedCount}</span>
+            </div>
+            <div class="agenda-stat-card">
+              <span class="agenda-stat-label">Total do Dia (~€)</span>
+              <span class="agenda-stat-value">${totalEstimated.toFixed(2)}€</span>
+            </div>
+          </div>
+
+          ${rows.length === 0 ? `
+            <div class="agenda-empty-state">
+              <span class="agenda-empty-icon">✂️</span>
+              <div class="agenda-empty-title">Nenhum corte marcado para este dia</div>
+              <div class="agenda-empty-sub">O horário está completamente livre ou ainda não há marcações registadas para ${date.split("-").reverse().join("/")}.</div>
+            </div>
+          ` : `
+            <div class="agenda-timeline">
+              ${rows.map((a) => {
+                const st = (a.status || "SCHEDULED").toLowerCase();
+                const statusBadge = 
+                  a.status === "SCHEDULED" ? `<span class="agenda-status-badge badge-scheduled">⏳ Agendado</span>` :
+                  a.status === "COMPLETED" ? `<span class="agenda-status-badge badge-completed">✅ Concluído</span>` :
+                  a.status === "CANCELLED" ? `<span class="agenda-status-badge badge-cancelled">❌ Cancelado</span>` :
+                  `<span class="agenda-status-badge badge-no_show">⚠️ Não compareceu</span>`;
+
+                return `
+                  <article class="agenda-card status-${st}">
+                    <div class="agenda-card-time-col">
+                      <div class="agenda-time-text">${a.start_time}</div>
+                      <div class="agenda-duration-badge">~${a.duration || 45} min</div>
+                    </div>
+
+                    <div class="agenda-card-main-col">
+                      <div class="agenda-client-name-row">
+                        <span class="agenda-client-name">${escapeHtml(a.client_name)}</span>
+                        ${statusBadge}
+                      </div>
+
+                      <div class="agenda-service-info">
+                        <span class="agenda-service-tag">✂️ ${escapeHtml(a.service_name || "Corte")}</span>
+                        ${a.is_silent ? `<span class="agenda-pref-pill">🤫 Silencioso</span>` : ""}
+                        ${a.music_request ? `<span class="agenda-pref-pill">🎵 ${escapeHtml(a.music_request)}</span>` : ""}
+                      </div>
+
+                      <div class="agenda-contact-row">
+                        ${a.phone ? `<span>📞 ${escapeHtml(a.phone)}</span>` : ""}
+                        ${a.email && !a.email.includes("@instagram.user") ? `<span>✉️ ${escapeHtml(a.email)}</span>` : ""}
+                        ${a.email && a.email.includes("@instagram.user") ? `<span>📸 @${escapeHtml(a.email.replace("@instagram.user", ""))}</span>` : ""}
+                        ${a.whatsAppUrl ? `
+                          <a href="${a.whatsAppUrl}" target="_blank" rel="noopener" class="agenda-wa-btn">
+                            💬 Abrir WhatsApp
+                          </a>` : ""}
+                      </div>
+                    </div>
+
+                    <div class="agenda-card-actions-col">
+                      ${a.status === "SCHEDULED" ? `
+                        <button class="agenda-action-btn agenda-action-done" data-st="${a.id}:COMPLETED" title="Marcar como atendido e creditar fidelização">
+                          ✓ Concluir
+                        </button>
+                        <button class="agenda-action-btn agenda-action-ghost" data-st="${a.id}:NO_SHOW" title="Marcar falta">
+                          Falta
+                        </button>
+                        <button class="agenda-action-btn agenda-action-danger" data-st="${a.id}:CANCELLED" title="Cancelar corte">
+                          ✕ Cancelar
+                        </button>
+                      ` : ""}
+
+                      ${a.status === "CANCELLED" ? `
+                        <button class="agenda-action-btn agenda-action-done" data-broadcast="${a.date}:${a.start_time}" title="Notificar lista de espera e utilizadores para esta vaga livre">
+                          ⚡ Avisar Clientes da Vaga
+                        </button>
+                      ` : ""}
+                    </div>
+                  </article>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>`;
     } else if (tab === "clientes") {
       const rows = await api("/api/admin/clients");
       body = `<table class="table"><tr><th>Nome</th><th>Contacto</th><th>Nível</th><th>Visitas</th></tr>${rows.map((c) => `<tr><td>${c.name}</td><td>${c.email}</td><td>${c.tier}</td><td>${c.visits}</td></tr>`).join("")}</table>`;
@@ -1987,6 +2089,12 @@ const VB = (() => {
     bindChrome();
     document.getElementById("d")?.addEventListener("change", (e) => {
       location.href = `/dashboard?tab=agenda&date=${e.target.value}`;
+    });
+    document.querySelectorAll("[data-nav-date]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetDate = btn.dataset.navDate;
+        location.href = `/dashboard?tab=agenda&date=${targetDate}`;
+      });
     });
     document.querySelectorAll("[data-st]").forEach((b) => {
       b.onclick = async () => {
