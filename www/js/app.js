@@ -760,7 +760,7 @@ const VB = (() => {
                 </div>
                 <span class="radar-badge-live">AO VIVO</span>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem">
+              <div class="radar-grid">
                 ${(() => {
                   const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
                   const now = new Date();
@@ -774,17 +774,17 @@ const VB = (() => {
                     const label = i === 0 ? "Hoje" : i === 1 ? "Amanhã" : dayLabels[dayOfWeek];
                     const dateStr = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
                     const statusBadge = isSunday 
-                      ? `<span style="font-size:0.7rem;color:#f87171;font-weight:700">🔴 Encerrado</span>` 
-                      : `<span style="font-size:0.7rem;color:#4ade80;font-weight:700">🟢 Vagas livres</span>`;
-                    const hours = isSunday ? "Folga semanal" : (isSaturday ? "09:00 - 12:00" : "09:00 - 19:00");
+                      ? `<span class="radar-badge" style="font-size:0.68rem;color:#f87171;font-weight:700">🔴 Encerrado</span>` 
+                      : `<span class="radar-badge" style="font-size:0.68rem;color:#4ade80;font-weight:700">🟢 Vagas</span>`;
+                    const hours = isSunday ? "Folga" : (isSaturday ? "09h - 12h" : "09h - 19h");
                     cards.push(`
                       <a href="/marcar" class="radar-day-card" style="text-decoration:none;display:block">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem">
-                          <strong style="font-size:0.8rem;color:var(--foreground,#fff)">${label}</strong>
-                          <span style="font-size:0.68rem;color:var(--muted,#a1a1aa)">${dateStr}</span>
+                          <strong style="font-size:0.78rem;color:var(--foreground,#fff)">${label}</strong>
+                          <span class="radar-date" style="font-size:0.65rem;color:var(--muted,#a1a1aa)">${dateStr}</span>
                         </div>
                         <div style="margin-bottom:0.2rem">${statusBadge}</div>
-                        <div style="font-size:0.68rem;color:var(--muted,#71717a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hours}</div>
+                        <div class="radar-hours" style="font-size:0.65rem;color:var(--muted,#71717a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hours}</div>
                       </a>
                     `);
                   }

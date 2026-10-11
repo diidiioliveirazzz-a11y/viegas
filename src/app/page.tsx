@@ -34,7 +34,7 @@ export default async function Home() {
       <Navbar user={session?.user} />
 
       {/* Hero Section */}
-      <section className="hero-section relative isolate min-h-[760px] overflow-hidden pt-40 pb-28 sm:min-h-[820px]">
+      <section className="hero-section relative isolate min-h-[580px] sm:min-h-[760px] overflow-hidden pt-28 pb-16 sm:pt-40 sm:pb-28">
         <HeroBackground
           images={featuredStyles
             .filter((style): style is typeof style & { imageUrl: string } => Boolean(style.imageUrl))
@@ -45,34 +45,34 @@ export default async function Home() {
             }))}
         />
 
-        <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
-          <div className="hero-eyebrow inline-block mb-5 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-colors">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 text-center">
+          <div className="hero-eyebrow inline-block mb-3 sm:mb-5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors">
             Barbeiro Exclusivo: Diogo Viegas
           </div>
 
-          <h1 className="hero-title text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-6 leading-tight">
+          <h1 className="hero-title text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-3 sm:mb-6 leading-tight">
             VIEGAS BARBER
           </h1>
 
-          <p className="text-2xl md:text-3xl font-extrabold tracking-wide mb-6 text-red-600 dark:text-red-400">
+          <p className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide mb-3 sm:mb-6 text-red-600 dark:text-red-400">
             “Mais que um corte.”
           </p>
 
-          <p className="hero-description max-w-2xl mx-auto mb-10 text-base leading-relaxed md:text-lg">
+          <p className="hero-description max-w-2xl mx-auto mb-6 sm:mb-10 text-xs sm:text-base leading-relaxed md:text-lg">
             Atendimento individual, degradês milimétricos e um ambiente desenhado para o teu momento. Sem esperas desnecessárias, com marcação rápida e precisa.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/marcar"
-              className="brand-button px-8 py-4 rounded-xl font-bold text-base transition shadow-xl"
+              className="brand-button px-8 py-3.5 sm:py-4 rounded-xl font-bold text-sm sm:text-base transition shadow-xl"
             >
               MARCAR AGORA
             </Link>
           </div>
 
           {/* Banner de Próxima Disponibilidade & Antecedência */}
-          <div className="hero-availability mt-14 max-w-xl mx-auto p-4 rounded-2xl flex items-center justify-between text-xs shadow-sm">
+          <div className="hero-availability mt-5 sm:mt-14 max-w-xl mx-auto p-3 sm:p-4 rounded-2xl flex items-center justify-between text-xs shadow-sm">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Agenda aberta para os próximos dias</span>
@@ -94,7 +94,7 @@ export default async function Home() {
               <span className="radar-badge-live">AO VIVO</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
               {[0, 1, 2].map((offset) => {
                 const d = new Date();
                 d.setDate(d.getDate() + offset);
@@ -109,28 +109,28 @@ export default async function Home() {
                   <Link
                     key={offset}
                     href="/marcar"
-                    className="radar-day-card block p-2.5 rounded-xl transition"
+                    className="radar-day-card block p-2 sm:p-2.5 rounded-xl transition min-w-0"
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-xs text-white">{label}</span>
-                      <span className="text-[10px] text-zinc-400">{dateStr}</span>
+                      <span className="font-bold text-[11px] sm:text-xs text-white truncate">{label}</span>
+                      <span className="text-[9px] sm:text-[10px] text-zinc-400">{dateStr}</span>
                     </div>
-                    <div className="text-[11px] font-semibold mb-0.5">
+                    <div className="text-[10px] sm:text-[11px] font-semibold mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                       {isSunday ? (
                         <span className="text-red-400">🔴 Encerrado</span>
                       ) : (
-                        <span className="text-emerald-400">🟢 Vagas livres</span>
+                        <span className="text-emerald-400">🟢 Vagas</span>
                       )}
                     </div>
-                    <div className="text-[10px] text-zinc-400 truncate">
-                      {isSunday ? "Folga semanal" : isSaturday ? "09:00 - 12:00" : "09:00 - 19:00"}
+                    <div className="text-[9px] sm:text-[10px] text-zinc-400 truncate">
+                      {isSunday ? "Folga" : isSaturday ? "09h - 12h" : "09h - 19h"}
                     </div>
                   </Link>
                 );
               })}
             </div>
 
-            <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between items-center text-[11px]">
+            <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between items-center text-[10px] sm:text-[11px]">
               <span className="text-zinc-400">⚡ Atendimento individual sem esperas</span>
               <Link href="/marcar" className="font-bold text-red-500 hover:text-red-400 transition">
                 Escolher Horário →

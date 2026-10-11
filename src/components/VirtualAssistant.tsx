@@ -79,7 +79,7 @@ export default function VirtualAssistant() {
       {/* Janela de Chat */}
       {isOpen && (
         <div
-          className={`w-[340px] sm:w-[380px] h-[500px] rounded-[28px] shadow-[0_28px_80px_rgba(15,23,42,0.55)] flex flex-col overflow-hidden border backdrop-blur-xl ${
+          className={`w-[340px] sm:w-[380px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-4rem)] rounded-[28px] shadow-[0_28px_80px_rgba(15,23,42,0.55)] flex flex-col overflow-hidden border backdrop-blur-xl ${
             isDark
               ? "bg-zinc-900/90 border-zinc-700/80 text-white shadow-black/80"
               : "bg-white/90 border-white/80 text-slate-900 shadow-slate-300/70"
@@ -87,7 +87,7 @@ export default function VirtualAssistant() {
         >
           {/* Header */}
           <div
-            className={`p-4 border-b flex justify-between items-center bg-gradient-to-r ${
+            className={`p-4 border-b flex-shrink-0 flex justify-between items-center bg-gradient-to-r ${
               isDark
                 ? "from-zinc-950 via-zinc-900 to-sky-950/80 border-zinc-800"
                 : "from-white via-slate-50 to-pink-50 border-slate-200"
@@ -163,7 +163,7 @@ export default function VirtualAssistant() {
           {/* Input */}
           <form
             onSubmit={handleSend}
-            className={`p-3 border-t flex gap-2 ${
+            className={`p-3 border-t flex-shrink-0 flex gap-2 ${
               isDark ? "bg-zinc-950 border-zinc-800" : "bg-slate-50 border-slate-200"
             }`}
           >

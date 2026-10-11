@@ -273,6 +273,14 @@ html.light .hero-availability { color: #4b2731; background: rgba(255,250,251,.84
   border-radius: 1.25rem;
   padding: 1.15rem;
   box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-sizing: border-box;
+}
+.radar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 .radar-ping-dot {
   position: relative;
@@ -310,6 +318,8 @@ html.light .hero-availability { color: #4b2731; background: rgba(255,250,251,.84
   border-radius: 0.85rem;
   padding: 0.75rem;
   transition: all 0.2s ease;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .radar-day-card:hover {
   background: rgba(239, 68, 68, 0.1);
@@ -472,7 +482,10 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
 }
 .chat-backdrop { display: none; }
 .chat {
-  width: 24rem; height: 33rem; max-height: calc(100vh - 4rem);
+  width: 24rem;
+  max-width: calc(100vw - 2rem);
+  height: min(34rem, calc(100vh - 3.5rem));
+  max-height: calc(100vh - 3.5rem);
   background: var(--card-bg); border: 1px solid var(--card-border);
   border-radius: 1.25rem; display: flex !important; flex-direction: column !important; overflow: hidden !important;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 30px rgba(220, 38, 38, 0.2);
@@ -497,6 +510,7 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
   background: var(--card-bg); color: var(--foreground); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 0.85rem; transition: all 0.15s ease;
+  flex-shrink: 0 !important;
 }
 .chat-close-btn:hover {
   background: rgba(239, 68, 68, 0.15); border-color: var(--accent); color: var(--accent);
@@ -607,9 +621,11 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
   display: flex !important; gap: 0.5rem; padding: 0.75rem 0.85rem;
   border-top: 1px solid var(--card-border); background: var(--card-bg);
   flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
 }
 .chat-form input {
-  flex: 1; min-width: 0; background: var(--background); color: var(--foreground);
+  flex: 1 1 auto !important; min-width: 0 !important; background: var(--background); color: var(--foreground);
   border: 1px solid var(--card-border); border-radius: 0.75rem;
   padding: 0.65rem 0.9rem; font-size: 0.85rem; outline: none;
 }
@@ -618,7 +634,8 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
 }
 .chat-form button {
   padding: 0.65rem 1.1rem; font-size: 0.82rem; border-radius: 0.75rem;
-  flex-shrink: 0; font-weight: 800; cursor: pointer;
+  flex-shrink: 0 !important; font-weight: 800; cursor: pointer;
+  white-space: nowrap !important;
 }
 .chat-mobile-handle { display: none; }
 
@@ -870,6 +887,82 @@ html.light .alert { background: #fff1f2; color: #9f1239; }
   }
   .loyalty-stamps-grid {
     gap: 0.4rem !important;
+  }
+  .hero-section {
+    min-height: auto !important;
+    padding: 6.2rem 0 3.5rem !important;
+  }
+  .hero-content {
+    padding: 0 1rem !important;
+  }
+  .hero-eyebrow {
+    font-size: 0.65rem !important;
+    padding: 0.4rem 0.85rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  .hero-title {
+    font-size: 2.35rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+  .hero-tag {
+    font-size: 1.15rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  .hero-description {
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .hero-availability {
+    margin-top: 1.2rem !important;
+    padding: 0.75rem 1rem !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    font-size: 0.72rem !important;
+    gap: 0.5rem !important;
+  }
+  .radar-box {
+    margin-top: 0.75rem !important;
+    padding: 0.85rem !important;
+  }
+  .radar-grid {
+    gap: 0.4rem !important;
+  }
+  .radar-day-card {
+    padding: 0.55rem 0.4rem !important;
+    border-radius: 0.65rem !important;
+  }
+  .radar-day-card strong {
+    font-size: 0.75rem !important;
+  }
+  .radar-day-card .radar-date {
+    font-size: 0.62rem !important;
+  }
+  .radar-day-card .radar-badge {
+    font-size: 0.62rem !important;
+    letter-spacing: -0.01em !important;
+  }
+  .radar-day-card .radar-hours {
+    font-size: 0.62rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-title {
+    font-size: 2.05rem !important;
+  }
+  .hero-availability {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .radar-day-card {
+    padding: 0.45rem 0.3rem !important;
+  }
+  .radar-day-card strong {
+    font-size: 0.7rem !important;
+  }
+  .radar-day-card .radar-hours {
+    font-size: 0.58rem !important;
   }
 }
 
