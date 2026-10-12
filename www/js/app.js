@@ -19,6 +19,20 @@ const VB = (() => {
     localStorage.setItem("vb-theme", theme);
   }
 
+  function getLocalDateStr(d = new Date()) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function shiftDateStr(dateStr, offsetDays) {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return getLocalDateStr();
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d + offsetDays, 12, 0, 0);
+    return getLocalDateStr(dt);
+  }
+
   function navHtml(page) {
     const first = user?.name ? user.name.split(" ")[0] : "";
     const staff = user && (user.role === "ADMIN" || user.role === "BARBER");
@@ -1135,7 +1149,7 @@ const VB = (() => {
 
     const services = await api("/api/services");
     const ref = new URLSearchParams(location.search).get("ref") || "";
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = getLocalDateStr();
     const state = {
       step: 1,
       service: null,
@@ -1766,6 +1780,7 @@ const VB = (() => {
 
   async function pageDashboard() {
     if (!user || (user.role !== "ADMIN" && user.role !== "BARBER")) return (location.href = "/login");
+    const todayIso = getLocalDateStr();
     const tab = new URLSearchParams(location.search).get("tab") || "hoje";
     const links = [
       ["hoje", "📅 Agenda Hoje"],
@@ -1779,9 +1794,17 @@ const VB = (() => {
     ];
     let body = "";
     if (tab === "hoje" || tab === "agenda") {
-      const todayIso = new Date().toISOString().slice(0, 10);
-      const date = tab === "hoje" ? todayIso : (new URLSearchParams(location.search).get("date") || todayIso);
-      const data = tab === "hoje" ? await api("/api/admin/today") : await api(`/api/admin/appointments?date=${date}`);
+      const urlDate = new URLSearchParams(location.search).get("date");
+      let date = (tab === "hoje" && !urlDate) ? todayIso : (urlDate || todayIso);
+
+      const data = (tab === "hoje" && !urlDate)
+        ? await api("/api/admin/today")
+        : await api(`/api/admin/appointments?date=${date}`);
+      
+      if (data.date && tab === "hoje" && !urlDate) {
+        date = data.date;
+      }
+
       const rows = data.appointments || (Array.isArray(data) ? data : []);
 
       // Calculate Day Statistics
@@ -1791,15 +1814,12 @@ const VB = (() => {
         .filter((a) => a.status !== "CANCELLED")
         .reduce((sum, a) => sum + (Number(a.price) || 12), 0);
 
-      // Date calculations for Prev/Next
-      const currD = new Date(date + "T00:00:00");
-      const prevD = new Date(currD);
-      prevD.setDate(currD.getDate() - 1);
-      const nextD = new Date(currD);
-      nextD.setDate(currD.getDate() + 1);
-      const prevStr = prevD.toISOString().slice(0, 10);
-      const nextStr = nextD.toISOString().slice(0, 10);
+      // Safe Prev/Next calculations
+      const prevStr = shiftDateStr(date, -1);
+      const nextStr = shiftDateStr(date, 1);
 
+      const [y, m, dNum] = date.split("-").map(Number);
+      const currD = new Date(y, m - 1, dNum, 12, 0, 0);
       const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
       const dayName = dayNames[currD.getDay()];
       const isToday = date === todayIso;
@@ -1808,13 +1828,13 @@ const VB = (() => {
         <div class="agenda-shell">
           <div class="agenda-header">
             <div class="agenda-title-box">
-              <h2>${tab === "hoje" ? "📅 Agenda de Hoje" : "🗓️ Agenda Diária"} ${isToday ? `<span class="radar-badge-live" style="font-size:.65rem;margin-left:.35rem">HOJE</span>` : ""}</h2>
+              <h2>${isToday ? "📅 Agenda de Hoje" : "🗓️ Agenda Diária"} ${isToday ? `<span class="radar-badge-live" style="font-size:.65rem;margin-left:.35rem">HOJE</span>` : ""}</h2>
               <p>${dayName}, ${date.split("-").reverse().join("/")}</p>
             </div>
             <div class="agenda-date-nav">
-              <button type="button" class="agenda-date-btn" data-nav-date="${prevStr}" title="Dia anterior">◀</button>
+              <button type="button" class="agenda-date-btn" data-nav-date="${prevStr}" title="Dia anterior (${prevStr})">◀</button>
               <input type="date" id="d" value="${date}" title="Mudar dia da agenda">
-              <button type="button" class="agenda-date-btn" data-nav-date="${nextStr}" title="Dia seguinte">▶</button>
+              <button type="button" class="agenda-date-btn" data-nav-date="${nextStr}" title="Dia seguinte (${nextStr})">▶</button>
               ${!isToday ? `<button type="button" class="btn btn-ghost" data-nav-date="${todayIso}" style="padding:.25rem .6rem;font-size:.75rem;margin-left:.25rem">Ir para Hoje</button>` : ""}
             </div>
           </div>
@@ -2088,14 +2108,28 @@ const VB = (() => {
       </div>`;
     bindChrome();
     document.getElementById("d")?.addEventListener("change", (e) => {
-      location.href = `/dashboard?tab=agenda&date=${e.target.value}`;
+      const val = e.target.value;
+      if (!val) return;
+      const tabTarget = val === todayIso ? "hoje" : "agenda";
+      history.pushState(null, "", `/dashboard?tab=${tabTarget}&date=${val}`);
+      pageDashboard();
     });
     document.querySelectorAll("[data-nav-date]").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
         const targetDate = btn.dataset.navDate;
-        location.href = `/dashboard?tab=agenda&date=${targetDate}`;
+        if (!targetDate) return;
+        const tabTarget = targetDate === todayIso ? "hoje" : "agenda";
+        history.pushState(null, "", `/dashboard?tab=${tabTarget}&date=${targetDate}`);
+        pageDashboard();
       });
     });
+    if (!window.__dashPopstateBound) {
+      window.__dashPopstateBound = true;
+      window.addEventListener("popstate", () => {
+        if (document.body.dataset.page === "dashboard") pageDashboard();
+      });
+    }
     document.querySelectorAll("[data-st]").forEach((b) => {
       b.onclick = async () => {
         const [id, status] = b.dataset.st.split(":");
