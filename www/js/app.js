@@ -3,9 +3,15 @@ const VB = (() => {
   let theme = localStorage.getItem("vb-theme") || "dark";
 
   async function api(path, options = {}) {
+    const token = localStorage.getItem("vb_auth_token");
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["x-auth-token"] = token;
+    }
     const res = await fetch(path, {
       credentials: "include",
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      headers,
       ...options,
       body: options.body && typeof options.body !== "string" ? JSON.stringify(options.body) : options.body,
     });
@@ -63,17 +69,17 @@ const VB = (() => {
             <a href="/galeria">Galeria</a>
             <a href="/loja">Loja</a>
             <a href="/fidelizacao">Fidelização</a>
-            ${!staff && user ? `<a href="/minhas-marcacoes">As Minhas Marcações</a>` : ""}
+            ${!staff && user ? `<a href="/minhas-marcacoes">As Minhas Marcações</a>` : `<a href="/bairro#active-banner">As Minhas Marcações</a>`}
           </nav>
           <div class="nav-right">
             <button class="icon-btn" data-theme title="Tema">${theme === "dark" ? "☀️" : "🌙"}</button>
             <span class="bell" id="bell-wrap"><button class="icon-btn" data-bell title="Notificações" aria-label="Notificações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button></span>
             ${!staff && user ? `<span class="muted" style="white-space:nowrap">Olá, <strong>${first}</strong></span><button class="icon-btn" data-logout title="Sair">Sair</button>` : ""}
             ${!user ? `<a href="/login" style="font-weight:700;font-size:.85rem">Entrar</a>` : ""}
-            <a class="brand-button btn" href="/marcar">MARCAR AGORA</a>
+            <a class="brand-button btn" href="/bairro">MARCAR AGORA</a>
           </div>
           <div class="nav-mobile">
-            <a class="brand-button btn btn-marcar-mob" href="/marcar">MARCAR</a>
+            <a class="brand-button btn btn-marcar-mob" href="/bairro">MARCAR</a>
             <span class="bell" id="bell-wrap-mobile"><button class="icon-btn" data-bell title="Notificações" aria-label="Notificações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button></span>
             <button class="icon-btn" data-menu aria-label="Menu">☰</button>
           </div>
@@ -92,7 +98,7 @@ const VB = (() => {
           <a href="/galeria">🖼️ Galeria de Trabalhos</a>
           <a href="/loja">🛒 Loja de Produtos</a>
           <a href="/fidelizacao">🎁 Cartão de Fidelização</a>
-          ${user ? `<a href="/minhas-marcacoes">📅 As Minhas Marcações</a>` : ""}
+          ${user ? `<a href="/minhas-marcacoes">📅 As Minhas Marcações</a>` : `<a href="/bairro#active-banner">📅 As Minhas Marcações (Bairro)</a>`}
           <a href="javascript:void(0)" data-bell style="display:flex;align-items:center;justify-content:space-between"><span>🔔 Notificações & Alertas</span><span class="count-drawer" style="display:none"></span></a>
           <div class="drawer-pwa-box" id="drawer-pwa-box">
             <button id="drawer-btn-enable" class="brand-button btn" style="width:100%;font-size:0.82rem;padding:0.7rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;gap:0.5rem">
@@ -149,8 +155,14 @@ const VB = (() => {
     });
     document.querySelectorAll("[data-logout]").forEach((btn) => {
       btn.onclick = async () => {
-        await api("/api/auth/logout", { method: "POST" });
-        location.href = "/";
+        localStorage.removeItem("vb_auth_token");
+        localStorage.removeItem("vb_user");
+        document.cookie = "vb_token=; path=/; max-age=0; SameSite=Lax";
+        document.cookie = "vb_user=; path=/; max-age=0; SameSite=Lax";
+        try {
+          await api("/api/auth/logout", { method: "POST" });
+        } catch {}
+        location.href = "/?view=public";
       };
     });
     document.querySelectorAll("[data-bell]").forEach((btn) => {
@@ -273,10 +285,10 @@ const VB = (() => {
         });
       }
 
-      await fetch("/api/push/subscribe", {
+      const isStaff = user && (user.role === "ADMIN" || user.role === "BARBER");
+      await api("/api/push/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription: sub }),
+        body: { subscription: sub, userId: user?.id || null, isAdmin: isStaff },
       });
     } catch (err) {
       console.warn("Registo de Push Subscription:", err);
@@ -348,7 +360,7 @@ const VB = (() => {
     const perm = getNotificationPermission();
     const existing = document.getElementById("pwa-notif-floating-banner");
 
-    if (perm === "granted" || perm === "unsupported") {
+    if (perm === "granted" || perm === "unsupported" || document.body.dataset.page === "dashboard" || (user && (user.role === "ADMIN" || user.role === "BARBER"))) {
       if (existing) existing.remove();
       return;
     }
@@ -751,8 +763,67 @@ const VB = (() => {
   async function pageHome() {
     const data = await api("/api/home");
     const slides = (data.styles || []).filter((s) => s.imageUrl).slice(0, 8);
+
+    // Verificar marcações ativas salvas neste telemóvel/dispositivo
+    let activeBairroHtml = "";
+    try {
+      const savedPhone = localStorage.getItem("vb_bairro_user_phone") || localStorage.getItem("vb_bairro_client_phone") || "";
+      let savedIds = [];
+      try {
+        savedIds = JSON.parse(localStorage.getItem("vb_bairro_active_ids") || "[]");
+      } catch (e) {}
+      const single = localStorage.getItem("vb_bairro_active_appointment");
+      if (single) {
+        try {
+          const s = JSON.parse(single);
+          if (s?.id && !savedIds.includes(s.id)) savedIds.push(s.id);
+        } catch (e) {}
+      }
+
+      if (savedPhone || savedIds.length > 0) {
+        const q = new URLSearchParams();
+        if (savedPhone) q.set("phone", savedPhone);
+        if (savedIds.length) q.set("ids", savedIds.join(","));
+        const bRes = await fetch(`/api/bairro/my-active?${q.toString()}`);
+        const bData = await bRes.json();
+        if (bData && bData.appointments && bData.appointments.length > 0) {
+          activeBairroHtml = `
+            <div class="wrap" style="padding-top:1.25rem;padding-bottom:0">
+              <div style="background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(18,20,28,0.95));border:1.5px solid var(--accent);border-radius:14px;padding:1.1rem 1.3rem;box-shadow:0 8px 24px rgba(0,0,0,0.5)">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;margin-bottom:0.75rem">
+                  <span class="chip" style="position:static;background:var(--accent);color:#000;font-weight:900;font-size:0.75rem;letter-spacing:0.04em">✂️ TENS ${bData.appointments.length > 1 ? `${bData.appointments.length} CORTES MARCADOS` : "CORTE MARCADO"}</span>
+                  <a href="/bairro#active-banner" style="color:var(--accent);font-weight:700;font-size:0.85rem;text-decoration:none">Ver Detalhes / Desmarcar →</a>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.6rem">
+                  ${bData.appointments.map((a) => {
+                    const dStr = new Date(a.date).toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" });
+                    return `
+                      <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(212,175,55,0.25);border-radius:10px;padding:0.85rem 1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem">
+                        <div>
+                          <div style="font-weight:800;color:#fff;font-size:1.05rem">${escapeHtml(a.service_name || "Corte")} <span style="color:var(--accent);font-size:0.9rem">(${Number(a.service_price || 12).toFixed(2)}€)</span></div>
+                          <div class="muted" style="font-size:0.85rem;margin-top:0.15rem">
+                            📅 <strong>${dStr}</strong> às <strong style="color:var(--accent)">${a.start_time}h</strong> · 👤 <strong>${escapeHtml(a.client_name)}</strong>
+                          </div>
+                        </div>
+                        <div>
+                          <a href="/bairro#active-banner" class="btn btn-ghost" style="color:#ef4444;border-color:rgba(239,68,68,0.4);font-size:0.8rem;padding:0.4rem 0.8rem;text-decoration:none">
+                            ❌ Desmarcar Vaga
+                          </a>
+                        </div>
+                      </div>
+                    `;
+                  }).join("")}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+    } catch (e) {}
+
     document.getElementById("app").innerHTML = `
       ${navHtml("home")}
+      ${activeBairroHtml}
       <main class="page-shell">
         <section class="hero-section">
           <div class="hero-slideshow" id="slides">
@@ -1598,6 +1669,10 @@ const VB = (() => {
   }
 
   function pageLogin() {
+    if (user && (user.role === "ADMIN" || user.role === "BARBER")) {
+      window.location.replace("/dashboard");
+      return;
+    }
     let method = "instagram";
     const render = () => {
       authShell(
@@ -1628,6 +1703,14 @@ const VB = (() => {
             : String(fd.get("email") || "").toLowerCase().trim();
         try {
           const data = await api("/api/auth/login", { method: "POST", body: { email: identifier, password: fd.get("password") } });
+          if (data.token) {
+            localStorage.setItem("vb_auth_token", data.token);
+            document.cookie = "vb_token=" + data.token + "; path=/; max-age=31536000; SameSite=Lax; Secure";
+          }
+          if (data.user) {
+            localStorage.setItem("vb_user", JSON.stringify(data.user));
+            document.cookie = "vb_user=" + encodeURIComponent(JSON.stringify(data.user)) + "; path=/; max-age=31536000; SameSite=Lax; Secure";
+          }
           location.href = data.user.role === "ADMIN" || data.user.role === "BARBER" ? "/dashboard" : "/";
         } catch (err) {
           const box = document.getElementById("err");
@@ -1640,6 +1723,10 @@ const VB = (() => {
   }
 
   function pageRegister() {
+    if (user && (user.role === "ADMIN" || user.role === "BARBER")) {
+      window.location.replace("/dashboard");
+      return;
+    }
     let method = "instagram";
     const render = () => {
       authShell(
@@ -1674,6 +1761,14 @@ const VB = (() => {
               password: fd.get("password"),
             },
           });
+          if (data.token) {
+            localStorage.setItem("vb_auth_token", data.token);
+            document.cookie = "vb_token=" + data.token + "; path=/; max-age=31536000; SameSite=Lax; Secure";
+          }
+          if (data.user) {
+            localStorage.setItem("vb_user", JSON.stringify(data.user));
+            document.cookie = "vb_user=" + encodeURIComponent(JSON.stringify(data.user)) + "; path=/; max-age=31536000; SameSite=Lax; Secure";
+          }
           location.href = data.user.role === "ADMIN" || data.user.role === "BARBER" ? "/dashboard" : "/";
         } catch (err) {
           const box = document.getElementById("err");
@@ -1686,7 +1781,7 @@ const VB = (() => {
   }
 
   async function pageMarcacoes() {
-    if (!user) return (location.href = "/login");
+    if (!user) return (location.href = "/bairro#active-banner");
     const rows = await api("/api/appointments/mine");
     document.getElementById("app").innerHTML = `
       ${navHtml()}
@@ -1779,7 +1874,25 @@ const VB = (() => {
   }
 
   async function pageDashboard() {
-    if (!user || (user.role !== "ADMIN" && user.role !== "BARBER")) return (location.href = "/login");
+    if (!user || (user.role !== "ADMIN" && user.role !== "BARBER")) {
+      const storedToken = localStorage.getItem("vb_auth_token");
+      if (storedToken) {
+        try {
+          const res = await api("/api/me");
+          user = res.user;
+          if (res.token) localStorage.setItem("vb_auth_token", res.token);
+        } catch {}
+      }
+      if (!user) {
+        try {
+          const cached = JSON.parse(localStorage.getItem("vb_user") || "null");
+          if (cached && (cached.role === "ADMIN" || cached.role === "BARBER")) {
+            user = cached;
+          }
+        } catch {}
+      }
+      if (!user || (user.role !== "ADMIN" && user.role !== "BARBER")) return (location.href = "/login");
+    }
     const todayIso = getLocalDateStr();
     const tab = new URLSearchParams(location.search).get("tab") || "hoje";
     const links = [
@@ -1808,11 +1921,15 @@ const VB = (() => {
       const rows = data.appointments || (Array.isArray(data) ? data : []);
 
       // Calculate Day Statistics
-      const scheduledCount = rows.filter((a) => a.status === "SCHEDULED").length;
-      const completedCount = rows.filter((a) => a.status === "COMPLETED").length;
-      const totalEstimated = rows
-        .filter((a) => a.status !== "CANCELLED")
-        .reduce((sum, a) => sum + (Number(a.price) || 12), 0);
+      const scheduledList = rows.filter((a) => a.status === "SCHEDULED");
+      const completedList = rows.filter((a) => a.status === "COMPLETED");
+      const scheduledCount = scheduledList.length;
+      const completedCount = completedList.length;
+
+      // Dinheiro feito = APENAS cortes concluídos
+      const totalCompletedEarned = completedList.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+      // Dinheiro previsto = cortes concluídos + cortes agendados pendentes
+      const totalProjected = [...completedList, ...scheduledList].reduce((sum, a) => sum + (Number(a.price) || 0), 0);
 
       // Safe Prev/Next calculations
       const prevStr = shiftDateStr(date, -1);
@@ -1841,16 +1958,58 @@ const VB = (() => {
 
           <div class="agenda-stats-bar">
             <div class="agenda-stat-card">
-              <span class="agenda-stat-label">Total Agendados</span>
+              <span class="agenda-stat-label">Agendados</span>
               <span class="agenda-stat-value" style="color:var(--accent)">${scheduledCount}</span>
             </div>
             <div class="agenda-stat-card">
-              <span class="agenda-stat-label">Cortes Concluídos</span>
+              <span class="agenda-stat-label">Concluídos</span>
               <span class="agenda-stat-value" style="color:#22c55e">${completedCount}</span>
             </div>
             <div class="agenda-stat-card">
-              <span class="agenda-stat-label">Total do Dia (~€)</span>
-              <span class="agenda-stat-value">${totalEstimated.toFixed(2)}€</span>
+              <span class="agenda-stat-label">Total Ganho (Feito)</span>
+              <span class="agenda-stat-value" style="color:#22c55e">${totalCompletedEarned.toFixed(2)}€</span>
+            </div>
+            <div class="agenda-stat-card">
+              <span class="agenda-stat-label">Total Previsto</span>
+              <span class="agenda-stat-value" style="color:var(--muted)">${totalProjected.toFixed(2)}€</span>
+            </div>
+          </div>
+
+          <div class="agenda-quick-actions" style="display:flex;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap">
+            <button type="button" class="btn brand-button" id="btn-quick-add" style="flex:1;min-width:140px;padding:.55rem .8rem;font-size:.82rem">➕ Marcar Cliente Manual</button>
+            <button type="button" class="btn btn-ghost" id="btn-quick-block" style="flex:1;min-width:140px;padding:.55rem .8rem;font-size:.82rem;border:1px solid rgba(239,68,68,0.4);color:#ef4444">⛔ Bloquear Horário</button>
+          </div>
+
+          <div id="quick-add-panel" style="display:none;background:var(--card-bg, #12141c);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:1rem;margin-bottom:1.2rem">
+            <h4 style="margin:0 0 .8rem;color:var(--accent);font-size:.95rem">✂️ Adicionar Marcação Manual (${date.split("-").reverse().join("/")})</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:.6rem;margin-bottom:.8rem">
+              <div><label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.2rem">Nome do Cliente *</label><input type="text" id="qa-name" placeholder="Ex: João Silva" style="width:100%;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:#fff"></div>
+              <div><label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.2rem">Telemóvel</label><input type="tel" id="qa-phone" placeholder="Ex: 912345678" style="width:100%;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:#fff"></div>
+              <div><label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.2rem">Hora de Início *</label><input type="time" id="qa-time" value="14:00" style="width:100%;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:#fff"></div>
+              <div><label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.2rem">Serviço</label>
+                <select id="qa-service" style="width:100%;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:#fff">
+                  <option value="srv-corte-12">Corte (12€)</option>
+                  <option value="srv-corte-sobrancelha-14">Corte + Sobrancelha (14€)</option>
+                  <option value="srv-corte-barba-17">Corte + Barba (17€)</option>
+                  <option value="srv-pack-completo-18">Pack Completo (18€)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:.5rem;justify-content:flex-end">
+              <button type="button" class="btn btn-ghost" id="qa-cancel" style="padding:.4rem .8rem;font-size:.8rem">Cancelar</button>
+              <button type="button" class="btn brand-button" id="qa-save" style="padding:.4rem 1rem;font-size:.8rem">Guardar Marcação</button>
+            </div>
+          </div>
+
+          <div id="quick-block-panel" style="display:none;background:var(--card-bg, #12141c);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:1rem;margin-bottom:1.2rem">
+            <h4 style="margin:0 0 .8rem;color:#ef4444;font-size:.95rem">⛔ Bloquear Horário (${date.split("-").reverse().join("/")})</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.8rem">
+              <div><label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.2rem">Hora Início *</label><input type="time" id="qb-start" value="14:00" style="width:100%;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:#fff"></div>
+              <div><label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:.2rem">Hora Fim *</label><input type="time" id="qb-end" value="15:00" style="width:100%;padding:.45rem;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:#fff"></div>
+            </div>
+            <div style="display:flex;gap:.5rem;justify-content:flex-end">
+              <button type="button" class="btn btn-ghost" id="qb-cancel" style="padding:.4rem .8rem;font-size:.8rem">Cancelar</button>
+              <button type="button" class="btn" id="qb-save" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:.4rem 1rem;font-size:.8rem">Bloquear Horário</button>
             </div>
           </div>
 
@@ -1884,7 +2043,7 @@ const VB = (() => {
                       </div>
 
                       <div class="agenda-service-info">
-                        <span class="agenda-service-tag">✂️ ${escapeHtml(a.service_name || "Corte")}</span>
+                        <span class="agenda-service-tag">✂️ ${escapeHtml(a.service_name || "Corte")}${a.price ? ` · <span style="color:var(--accent);font-weight:900">${Number(a.price).toFixed(2)}€</span>` : ""}</span>
                         ${a.is_silent ? `<span class="agenda-pref-pill">🤫 Silencioso</span>` : ""}
                         ${a.music_request ? `<span class="agenda-pref-pill">🎵 ${escapeHtml(a.music_request)}</span>` : ""}
                       </div>
@@ -2082,7 +2241,10 @@ const VB = (() => {
             </div>
           </div>
           <div style="display:flex;gap:.5rem;align-items:center">
-            <a class="btn btn-ghost" href="/" style="padding:.4rem .7rem;font-size:.78rem">Site público</a>
+            <button type="button" class="btn btn-ghost" id="btn-admin-enable-notif" title="Notificações no Telemóvel" style="width:2.35rem;height:2.35rem;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:1.15rem;border-radius:50%">
+              🔔
+            </button>
+            <a class="btn btn-ghost" href="/?view=public" style="padding:.4rem .7rem;font-size:.78rem">Site público</a>
             <button class="btn-ghost btn" data-logout style="padding:.4rem .7rem;font-size:.78rem">Sair</button>
           </div>
         </header>
@@ -2101,7 +2263,7 @@ const VB = (() => {
               </div>
               <nav>${links.map(([id, label]) => `<a class="${tab === id ? "active" : ""}" href="/dashboard?tab=${id}">${label}</a>`).join("")}</nav>
             </div>
-            <div><a class="btn btn-ghost" href="/">← Site público</a><p style="margin:.5rem 0">${user.name}<br><span class="chip" style="position:static">${user.role}</span></p><button class="btn-ghost btn" data-logout>Terminar sessão</button></div>
+            <div><a class="btn btn-ghost" href="/?view=public">← Site público</a><p style="margin:.5rem 0">${user.name}<br><span class="chip" style="position:static">${user.role}</span></p><button class="btn-ghost btn" data-logout>Terminar sessão</button></div>
           </aside>
           <main class="dash-main">${body}</main>
         </div>
@@ -2129,6 +2291,115 @@ const VB = (() => {
       window.addEventListener("popstate", () => {
         if (document.body.dataset.page === "dashboard") pageDashboard();
       });
+    }
+
+    // Ações Rápidas da Agenda: Marcar Manual & Bloquear
+    const btnQuickAdd = document.getElementById("btn-quick-add");
+    const btnQuickBlock = document.getElementById("btn-quick-block");
+    const pnlQuickAdd = document.getElementById("quick-add-panel");
+    const pnlQuickBlock = document.getElementById("quick-block-panel");
+
+    if (btnQuickAdd && pnlQuickAdd) {
+      btnQuickAdd.onclick = () => {
+        const isHidden = pnlQuickAdd.style.display === "none";
+        pnlQuickAdd.style.display = isHidden ? "block" : "none";
+        if (pnlQuickBlock) pnlQuickBlock.style.display = "none";
+      };
+      document.getElementById("qa-cancel")?.addEventListener("click", () => {
+        pnlQuickAdd.style.display = "none";
+      });
+      document.getElementById("qa-save")?.addEventListener("click", async () => {
+        const name = document.getElementById("qa-name")?.value?.trim();
+        const phone = document.getElementById("qa-phone")?.value?.trim();
+        const time = document.getElementById("qa-time")?.value;
+        const serviceId = document.getElementById("qa-service")?.value;
+        const urlDate = new URLSearchParams(location.search).get("date");
+        const apptDate = (tab === "hoje" && !urlDate) ? todayIso : (urlDate || todayIso);
+
+        if (!name || !time) {
+          alert("Por favor indica o nome do cliente e o horário.");
+          return;
+        }
+
+        try {
+          await api("/api/admin/appointments", {
+            method: "POST",
+            body: {
+              clientName: name,
+              clientPhone: phone,
+              serviceId,
+              date: apptDate,
+              startTime: time,
+            },
+          });
+          alert("Corte agendado com sucesso!");
+          pageDashboard();
+        } catch (err) {
+          alert("Erro ao marcar corte: " + (err.message || "Tenta novamente"));
+        }
+      });
+    }
+
+    if (btnQuickBlock && pnlQuickBlock) {
+      btnQuickBlock.onclick = () => {
+        const isHidden = pnlQuickBlock.style.display === "none";
+        pnlQuickBlock.style.display = isHidden ? "block" : "none";
+        if (pnlQuickAdd) pnlQuickAdd.style.display = "none";
+      };
+      document.getElementById("qb-cancel")?.addEventListener("click", () => {
+        pnlQuickBlock.style.display = "none";
+      });
+      document.getElementById("qb-save")?.addEventListener("click", async () => {
+        const startTime = document.getElementById("qb-start")?.value;
+        const endTime = document.getElementById("qb-end")?.value;
+        const urlDate = new URLSearchParams(location.search).get("date");
+        const blockDate = (tab === "hoje" && !urlDate) ? todayIso : (urlDate || todayIso);
+
+        if (!startTime || !endTime) {
+          alert("Indica a hora de início e hora de fim.");
+          return;
+        }
+
+        try {
+          await api("/api/admin/blocked-times", {
+            method: "POST",
+            body: {
+              date: blockDate,
+              startTime,
+              endTime,
+              reason: "Bloqueio Manual",
+            },
+          });
+          alert(`Horário ${startTime} às ${endTime} bloqueado no site com sucesso!`);
+          pageDashboard();
+        } catch (err) {
+          alert("Erro ao bloquear horário: " + (err.message || "Tenta novamente"));
+        }
+      });
+    }
+
+    // Botão de Notificações compacto no Dashboard (apenas ícone)
+    const btnNotif = document.getElementById("btn-admin-enable-notif");
+    if (btnNotif) {
+      const perm = getNotificationPermission();
+      if (perm === "granted") {
+        btnNotif.innerHTML = "🔔";
+        btnNotif.title = "Notificações Ativas ✔️ (Clica para testar no telemóvel)";
+        btnNotif.style.borderColor = "var(--accent)";
+        btnNotif.style.color = "var(--accent)";
+        btnNotif.onclick = async () => {
+          await registerWebPushSubscription();
+          triggerTestNotification();
+        };
+      } else {
+        btnNotif.innerHTML = "🔕";
+        btnNotif.title = "Clica para ativar notificações no telemóvel";
+        btnNotif.onclick = async () => {
+          btnNotif.innerHTML = "⏳";
+          await requestPushPermission();
+          pageDashboard();
+        };
+      }
     }
     document.querySelectorAll("[data-st]").forEach((b) => {
       b.onclick = async () => {
@@ -2240,15 +2511,31 @@ const VB = (() => {
 
   async function boot(page) {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js?v=19").then((reg) => {
+      navigator.serviceWorker.register("/sw.js?v=21").then((reg) => {
         reg.update();
       }).catch(() => {});
     }
     applyTheme();
     try {
-      user = (await api("/api/me")).user;
+      const meData = await api("/api/me");
+      user = meData.user;
+      if (meData.token) {
+        localStorage.setItem("vb_auth_token", meData.token);
+      }
+      if (user) {
+        localStorage.setItem("vb_user", JSON.stringify(user));
+      }
     } catch {
-      user = null;
+      try {
+        const cached = JSON.parse(localStorage.getItem("vb_user") || "null");
+        if (cached && localStorage.getItem("vb_auth_token")) {
+          user = cached;
+        } else {
+          user = null;
+        }
+      } catch {
+        user = null;
+      }
     }
     if ("Notification" in window && Notification.permission === "granted") {
       registerWebPushSubscription();

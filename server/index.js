@@ -40,27 +40,96 @@ const VAPID_EMAIL = process.env.VAPID_EMAIL || "mailto:suporte@viegasbarber.pt";
 webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
 const app = express();
-const SESSION_MAX_AGE = 365 * 24 * 60 * 60 * 1000;
+app.set("trust proxy", 1);
+const SESSION_MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 ano inteiro de persistência contínua
 const www = path.join(__dirname, "..", "www");
 
 app.use(express.json({ limit: "16mb" }));
 app.use(express.urlencoded({ extended: true, limit: "16mb" }));
+const crypto = require("crypto");
+const AUTH_SECRET = process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET || "viegas-barber-secret-2026";
+
+function createAuthToken(user) {
+  const payload = Buffer.from(
+    JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      t: Date.now(),
+    })
+  ).toString("base64url");
+  const signature = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function verifyAuthToken(token) {
+  if (!token || typeof token !== "string" || !token.includes(".")) return null;
+  const [payload, signature] = token.split(".");
+  const expected = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
+  if (signature !== expected) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function getCookieValue(req, name) {
+  const header = req.headers.cookie || "";
+  const match = header.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+const isProduction = process.env.NODE_ENV === "production" || !!process.env.RENDER;
+
 app.use(
   session({
     name: "viegas.sid",
-    secret: process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET || "viegas-barber-secret-2026",
+    secret: AUTH_SECRET,
     store: new NoSQLSessionStore({ ttl: SESSION_MAX_AGE }),
     resave: false,
     saveUninitialized: false,
-    rolling: true,
+    rolling: true, // Renova o prazo a cada visita do Viegas
     cookie: {
       maxAge: SESSION_MAX_AGE,
       httpOnly: true,
       sameSite: "lax",
-      secure: false, // works seamlessly on both http and https/proxies
+      secure: isProduction ? true : "auto",
     },
   })
 );
+
+// Middleware de Autenticação Permanente por Token (Garante que no iPhone / PWA o Viegas NUNCA perde a sessão)
+app.use((req, res, next) => {
+  if (req.session && req.session.user) return next();
+
+  const authHeader = req.headers.authorization || "";
+  let token = null;
+  if (authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7).trim();
+  } else if (req.headers["x-auth-token"]) {
+    token = req.headers["x-auth-token"];
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
+  } else {
+    token = getCookieValue(req, "vb_token");
+  }
+
+  if (token) {
+    const verified = verifyAuthToken(token);
+    if (verified && verified.id) {
+      req.session.user = {
+        id: verified.id,
+        name: verified.name,
+        email: verified.email,
+        role: verified.role,
+      };
+    }
+  }
+  next();
+});
 
 app.use(
   express.static(www, {
@@ -179,6 +248,56 @@ async function notify(userId, title, message, type = "INFO", actionUrl = null, d
   }
 }
 
+async function checkAndNotifyFullDay(date) {
+  try {
+    const sched = getDaySchedule(date);
+    if (sched.closed) return;
+
+    const settings = await getSettings();
+    const openMin = timeToMinutes(sched.open);
+    const closeMin = timeToMinutes(sched.close);
+    const lunchStart = timeToMinutes(settings.lunchStart);
+    const lunchEnd = timeToMinutes(settings.lunchEnd);
+
+    const appts = await db.appointments().find({ date, status: "SCHEDULED" }).toArray();
+    const blocked = await db.blocked_times().find({ date }).toArray();
+
+    let freeCount = 0;
+    for (let mins = openMin; mins + 50 <= closeMin; mins += 60) {
+      const end = mins + 50;
+      if (closeMin > lunchEnd && overlaps(mins, end, lunchStart, lunchEnd)) continue;
+      const timeStr = minutesToTime(mins);
+      if (new Date(`${date}T${timeStr}:00`).getTime() < Date.now()) continue;
+
+      const busy =
+        appts.some((a) => overlaps(mins, end, timeToMinutes(a.start_time), timeToMinutes(a.end_time))) ||
+        blocked.some((b) => overlaps(mins, end, timeToMinutes(b.start_time), timeToMinutes(b.end_time)));
+      if (!busy) freeCount++;
+    }
+
+    // Se não houver vagas livres restantes e tiver agendamentos marcados
+    if (freeCount === 0 && appts.length > 0) {
+      const dateObj = new Date(`${date}T12:00:00`);
+      const formattedDate = dateObj.toLocaleDateString("pt-PT", { day: "numeric", month: "long" });
+      const dedupeKey = `full_day_${date}`;
+
+      const staffMembers = await db.users().find({ role: { $in: ["ADMIN", "BARBER"] } }).toArray();
+      for (const staff of staffMembers) {
+        await notify(
+          staff.id,
+          "🔥 Agenda Lotada!",
+          `No dia ${formattedDate} já tens a agenda cheia! Todas as vagas do dia estão reservadas.`,
+          "AGENDA_FULL",
+          `/dashboard?tab=agenda&date=${date}`,
+          dedupeKey
+        );
+      }
+    }
+  } catch (err) {
+    console.error("Erro ao verificar agenda cheia:", err);
+  }
+}
+
 function overlaps(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && aEnd > bStart;
 }
@@ -282,7 +401,12 @@ async function offerNextWaitlistEntry(date, startTime) {
 // -------------------------------------------------------------
 
 app.get("/api/me", (req, res) => {
-  res.json({ user: currentUser(req) });
+  const user = currentUser(req);
+  if (user) {
+    const token = createAuthToken(user);
+    return res.json({ user, token });
+  }
+  res.json({ user: null });
 });
 
 app.post("/api/auth/login", async (req, res) => {
@@ -303,7 +427,22 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role };
-    res.json({ user: req.session.user });
+    const token = createAuthToken(user);
+    res.cookie("vb_token", token, {
+      maxAge: SESSION_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+      secure: isProduction,
+      httpOnly: false,
+    });
+    res.cookie("vb_user", JSON.stringify(req.session.user), {
+      maxAge: SESSION_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+      secure: isProduction,
+      httpOnly: false,
+    });
+    res.json({ user: req.session.user, token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Não foi possível iniciar sessão." });
@@ -311,6 +450,9 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 app.post("/api/auth/logout", (req, res) => {
+  res.clearCookie("vb_token", { path: "/" });
+  res.clearCookie("vb_user", { path: "/" });
+  res.clearCookie("viegas.sid", { path: "/" });
   req.session.destroy(() => res.json({ ok: true }));
 });
 
@@ -368,7 +510,22 @@ app.post("/api/auth/register", async (req, res) => {
     });
 
     req.session.user = { id: userId, name, email, role: "CLIENT" };
-    res.status(201).json({ message: "Conta criada com sucesso", user: req.session.user });
+    const token = createAuthToken(req.session.user);
+    res.cookie("vb_token", token, {
+      maxAge: SESSION_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+      secure: isProduction,
+      httpOnly: false,
+    });
+    res.cookie("vb_user", JSON.stringify(req.session.user), {
+      maxAge: SESSION_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+      secure: isProduction,
+      httpOnly: false,
+    });
+    res.status(201).json({ message: "Conta criada com sucesso", user: req.session.user, token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Ocorreu um erro ao criar a conta" });
@@ -461,8 +618,12 @@ app.get("/api/appointments/availability", async (req, res) => {
 
     const visits = req.session.user ? await userVisits(req.session.user.id) : 0;
     const isVip = loyaltyTierForVisits(visits) === "VIP";
-    if (!isDateWithinBookingWindow(dateStr, isVip)) {
+    const isBairro = req.query.bairro === "true";
+    if (!isBairro && !isDateWithinBookingWindow(dateStr, isVip)) {
       return res.status(400).json({ error: bookingWindowMessage() });
+    }
+    if (isBairro && dateStr < todayDate()) {
+      return res.status(400).json({ error: "A data selecionada já passou." });
     }
 
     const settings = await getSettings();
@@ -697,6 +858,9 @@ app.post("/api/appointments", async (req, res) => {
         `/dashboard?tab=agenda&date=${date}`
       );
     }
+
+    // Verificar se o dia ficou lotado
+    await checkAndNotifyFullDay(date);
 
     // Disparo automático WhatsApp (se API configurada em .env)
     await sendWhatsAppMessage(barberPhone, waMessage);
@@ -990,7 +1154,11 @@ app.post("/api/push/subscribe", async (req, res) => {
     if (!subscription || !subscription.endpoint) {
       return res.status(400).json({ error: "Subscrição inválida." });
     }
-    const userId = req.session.user?.id || null;
+    let userId = req.session.user?.id || req.body?.userId || null;
+    if (!userId && req.body?.isAdmin) {
+      const adminUser = await db.users().findOne({ role: "ADMIN" });
+      if (adminUser) userId = adminUser.id;
+    }
     const endpoint = subscription.endpoint;
 
     await db.push_subscriptions().updateOne(
@@ -1163,8 +1331,10 @@ app.get("/api/admin/today", requireStaff, async (req, res) => {
     const s = await db.services().findOne({ id: a.service_id });
     const u = await db.users().findOne({ id: a.user_id });
     a.service_name = s?.name || "Corte";
-    a.client_name = u?.name || "Cliente";
-    a.phone = u?.phone || "";
+    a.price = Number(s?.price) || 12;
+    a.duration = Number(s?.duration_minutes) || 45;
+    a.client_name = a.client_name || u?.name || "Cliente";
+    a.phone = a.client_phone || u?.phone || "";
     a.email = u?.email || "";
     if (a.phone) {
       const waMsg = `✂️ *Viegas Barber*\n\nOlá ${a.client_name}! A confirmar o teu corte (${a.service_name}) para hoje às *${a.start_time}* com o Diogo. Contamos contigo!`;
@@ -1181,8 +1351,10 @@ app.get("/api/admin/appointments", requireStaff, async (req, res) => {
     const s = await db.services().findOne({ id: a.service_id });
     const u = await db.users().findOne({ id: a.user_id });
     a.service_name = s?.name || "Corte";
-    a.client_name = u?.name || "Cliente";
-    a.phone = u?.phone || "";
+    a.price = Number(s?.price) || 12;
+    a.duration = Number(s?.duration_minutes) || 45;
+    a.client_name = a.client_name || u?.name || "Cliente";
+    a.phone = a.client_phone || u?.phone || "";
     a.email = u?.email || "";
     if (a.phone) {
       const waMsg = `✂️ *Viegas Barber*\n\nOlá ${a.client_name}! A confirmar a tua marcação (${a.service_name}) para ${a.date} às *${a.start_time}* com o Diogo. Contamos contigo!`;
@@ -1228,6 +1400,71 @@ app.patch("/api/admin/appointments/:id", requireStaff, async (req, res) => {
     await offerNextWaitlistEntry(appt.date, appt.start_time);
   }
   res.json({ ok: true });
+});
+
+app.post("/api/admin/appointments", requireStaff, async (req, res) => {
+  try {
+    const { clientName, clientPhone, serviceId, date, startTime, notes } = req.body || {};
+    if (!clientName || !date || !startTime) {
+      return res.status(400).json({ error: "Nome, data e hora são obrigatórios." });
+    }
+
+    const service = await db.services().findOne({ id: serviceId || "srv-corte-12" });
+    const sId = service?.id || "srv-corte-12";
+    const startMins = timeToMinutes(startTime);
+    const endMins = startMins + 50;
+    const endTime = minutesToTime(endMins);
+
+    let user = null;
+    if (clientPhone) {
+      user = await db.users().findOne({ phone: clientPhone });
+    }
+    if (!user) {
+      const cleanPhone = (clientPhone || "").replace(/\D/g, "");
+      const guestEmail = cleanPhone ? `manual_${cleanPhone}@viegasbarber.pt` : `manual_${id().slice(0, 8)}@viegasbarber.pt`;
+      user = {
+        id: id(),
+        name: clientName.trim(),
+        phone: clientPhone || null,
+        email: guestEmail,
+        role: "CLIENT",
+        created_at: new Date().toISOString(),
+      };
+      await db.users().insertOne(user);
+    }
+
+    const newAppt = {
+      id: id(),
+      user_id: user.id,
+      client_name: clientName.trim(),
+      client_phone: clientPhone || null,
+      service_id: sId,
+      date,
+      start_time: startTime,
+      end_time: endTime,
+      status: "SCHEDULED",
+      notes: notes || null,
+      created_via: "ADMIN_MANUAL",
+      loyalty_awarded: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await db.appointments().insertOne(newAppt);
+    res.json({ ok: true, appointment: newAppt });
+  } catch (error) {
+    console.error("Erro ao criar marcação manual:", error);
+    res.status(500).json({ error: "Erro ao criar marcação manual." });
+  }
+});
+
+app.delete("/api/admin/blocked-times/:id", requireStaff, async (req, res) => {
+  try {
+    await db.blocked_times().deleteOne({ id: req.params.id });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao remover bloqueio." });
+  }
 });
 
 app.get("/api/admin/clients", requireStaff, async (_req, res) => {
@@ -1541,12 +1778,483 @@ app.get("/api/cron/notifications", async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// Endpoints Modo Bairro (Marcações sem registo obrigatório)
+// -------------------------------------------------------------
+
+app.post("/api/bairro/book", async (req, res) => {
+  try {
+    if (isNighttimeBlocked()) {
+      return res.status(400).json({ error: NIGHTTIME_BLOCK_MESSAGE });
+    }
+
+    const body = req.body || {};
+    const serviceId = body.serviceId;
+    const date = body.date;
+    const startTime = body.startTime;
+    const clientName = (body.clientName || "").trim();
+    const clientPhone = (body.clientPhone || "").trim();
+    const clientInstagram = (body.clientInstagram || body.instagram || "").trim();
+    const notes = (body.notes || "").trim();
+
+    if (!clientName || clientName.length < 2) {
+      return res.status(400).json({ error: "Por favor indica o teu nome." });
+    }
+    if (!clientPhone || clientPhone.replace(/\D/g, "").length < 9) {
+      return res.status(400).json({ error: "Por favor indica um número de telemóvel válido (mínimo 9 dígitos)." });
+    }
+    if (!serviceId || !/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(startTime || "")) {
+      return res.status(400).json({ error: "Serviço, data ou horário inválidos." });
+    }
+
+    const daySched = getDaySchedule(date);
+    if (daySched.closed) {
+      return res.status(400).json({ error: "A barbearia está encerrada aos domingos." });
+    }
+
+    const service = await db.services().findOne({ id: serviceId, isActive: true });
+    if (!service) return res.status(404).json({ error: "Serviço não encontrado ou indisponível" });
+
+    if (date < todayDate()) {
+      return res.status(400).json({ error: "A data selecionada já passou." });
+    }
+
+    const startMins = timeToMinutes(startTime);
+    const slotDuration = 50;
+    const endMins = startMins + slotDuration;
+    const endTime = minutesToTime(endMins);
+    const settings = await getSettings();
+    const slotMs = new Date(`${date}T${startTime}:00`).getTime();
+
+    const openMinutes = timeToMinutes(daySched.open);
+    const closeMinutes = timeToMinutes(daySched.close);
+    const lunchEnd = timeToMinutes(settings.lunchEnd);
+
+    if (
+      startMins < openMinutes ||
+      endMins > closeMinutes ||
+      (closeMinutes > lunchEnd && overlaps(startMins, endMins, timeToMinutes(settings.lunchStart), lunchEnd))
+    ) {
+      return res.status(400).json({ error: `Horário indisponível. Horário à ${daySched.label}: ${daySched.open} às ${daySched.close}.` });
+    }
+
+    if (slotMs < Date.now()) {
+      return res.status(400).json({ error: "Este horário já passou. Por favor escolhe um horário futuro." });
+    }
+
+    const appts = await db.appointments().find({ date, status: "SCHEDULED" }).toArray();
+    const blocked = await db.blocked_times().find({ date }).toArray();
+    if (
+      appts.some((a) => overlaps(startMins, endMins, timeToMinutes(a.start_time), timeToMinutes(a.end_time))) ||
+      blocked.some((b) => overlaps(startMins, endMins, timeToMinutes(b.start_time), timeToMinutes(b.end_time)))
+    ) {
+      return res.status(409).json({ error: "Este horário acabou de ser reservado por outro cliente. Por favor escolhe outro." });
+    }
+
+    let user = await db.users().findOne({ phone: clientPhone });
+    if (!user) {
+      const cleanPhone = clientPhone.replace(/\D/g, "");
+      const guestEmail = `bairro_${cleanPhone}@bairro.viegasbarber.pt`;
+      user = await db.users().findOne({ email: guestEmail });
+      if (!user) {
+        user = {
+          id: id(),
+          name: clientName,
+          phone: clientPhone,
+          instagram: clientInstagram || null,
+          email: guestEmail,
+          role: "CLIENT",
+          created_at: new Date().toISOString(),
+        };
+        await db.users().insertOne(user);
+      }
+    } else {
+      const userUpdates = {};
+      if (clientName && (!user.name || user.name.startsWith("Cliente"))) userUpdates.name = clientName;
+      if (clientInstagram && !user.instagram) userUpdates.instagram = clientInstagram;
+      if (Object.keys(userUpdates).length > 0) {
+        await db.users().updateOne({ id: user.id }, { $set: userUpdates });
+      }
+    }
+
+    const apptId = id();
+    console.log(`[NOVA_MARCAÇÃO] ${clientName} (${clientPhone}) marcou ${service.name} para ${date} às ${startTime}`);
+    await db.appointments().insertOne({
+      id: apptId,
+      user_id: user.id,
+      client_name: clientName,
+      client_phone: clientPhone,
+      client_instagram: clientInstagram || null,
+      service_id: service.id,
+      date,
+      start_time: startTime,
+      end_time: endTime,
+      status: "SCHEDULED",
+      notes: notes || null,
+      created_via: "BAIRRO",
+      loyalty_awarded: false,
+      created_at: new Date().toISOString(),
+    });
+
+    const staffMembers = await db.users().find({ role: { $in: ["ADMIN", "BARBER"] } }).toArray();
+    for (const staff of staffMembers) {
+      await notify(
+        staff.id,
+        "✂️ Nova Marcação no Site!",
+        `${clientName} (${clientPhone}${clientInstagram ? ` • ${clientInstagram}` : ""}) marcou ${service.name} para ${date} às ${startTime}.`,
+        "BOOKING",
+        `/dashboard?tab=agenda&date=${date}`
+      );
+    }
+
+    // Verificar se o dia ficou com a agenda cheia
+    await checkAndNotifyFullDay(date);
+
+    res.json({
+      success: true,
+      appointment: {
+        id: apptId,
+        clientName,
+        clientPhone,
+        clientInstagram: clientInstagram || null,
+        serviceId: service.id,
+        serviceName: service.name,
+        servicePrice: service.price,
+        date,
+        startTime,
+        endTime,
+      },
+    });
+  } catch (error) {
+    console.error("Erro na marcação de bairro:", error);
+    res.status(500).json({ error: "Erro ao processar marcação." });
+  }
+});
+
+app.get("/api/bairro/my-active", async (req, res) => {
+  try {
+    const phone = String(req.query.phone || "").trim();
+    const apptId = String(req.query.id || "").trim();
+    const apptIds = String(req.query.ids || "").trim();
+
+    if (!phone && !apptId && !apptIds) {
+      return res.json({ appointments: [] });
+    }
+
+    const today = todayDate();
+    const orConditions = [];
+
+    if (apptId) {
+      orConditions.push({ id: apptId });
+    }
+    if (apptIds) {
+      const splitIds = apptIds.split(",").map((s) => s.trim()).filter(Boolean);
+      if (splitIds.length > 0) {
+        orConditions.push({ id: { $in: splitIds } });
+      }
+    }
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, "");
+      const users = await db.users().find({
+        $or: [
+          { phone },
+          { phone: { $regex: cleanPhone } },
+          { email: { $regex: cleanPhone } },
+        ],
+      }).toArray();
+      const userIds = users.map((u) => u.id);
+
+      orConditions.push({ client_phone: phone });
+      if (cleanPhone) {
+        orConditions.push({ client_phone: { $regex: cleanPhone } });
+      }
+      if (userIds.length > 0) {
+        orConditions.push({ user_id: { $in: userIds } });
+      }
+    }
+
+    if (orConditions.length === 0) {
+      return res.json({ appointments: [] });
+    }
+
+    const query = {
+      status: "SCHEDULED",
+      date: { $gte: today },
+      $or: orConditions,
+    };
+
+    const rows = await db.appointments().find(query).sort({ date: 1, start_time: 1 }).toArray();
+    for (const a of rows) {
+      const s = await db.services().findOne({ id: a.service_id });
+      a.service_name = s?.name || "Corte";
+      a.service_price = s?.price || 12;
+    }
+
+    res.json({ appointments: rows });
+  } catch (error) {
+    console.error("Erro ao pesquisar marcações ativas:", error);
+    res.status(500).json({ error: "Erro ao consultar marcações." });
+  }
+});
+
+app.post("/api/bairro/cancel", async (req, res) => {
+  try {
+    const { appointmentId, phone } = req.body || {};
+    if (!appointmentId) return res.status(400).json({ error: "Marcação não indicada." });
+
+    const appt = await db.appointments().findOne({ id: appointmentId });
+    if (!appt) return res.status(404).json({ error: "Marcação não encontrada." });
+    if (appt.status !== "SCHEDULED") return res.status(400).json({ error: "Esta marcação já não se encontra ativa." });
+
+    if (phone) {
+      const cleanInput = phone.replace(/\D/g, "");
+      const cleanAppt = (appt.client_phone || "").replace(/\D/g, "");
+      const user = await db.users().findOne({ id: appt.user_id });
+      const cleanUserPhone = (user?.phone || "").replace(/\D/g, "");
+      const matchAppt = cleanAppt && (cleanAppt.includes(cleanInput) || cleanInput.includes(cleanAppt));
+      const matchUser = cleanUserPhone && (cleanUserPhone.includes(cleanInput) || cleanInput.includes(cleanUserPhone));
+      if (cleanAppt && !matchAppt && cleanUserPhone && !matchUser) {
+        return res.status(403).json({ error: "O número de telemóvel não coincide com esta marcação." });
+      }
+    }
+
+    await db.appointments().updateOne({ id: appt.id }, { $set: { status: "CANCELLED" } });
+
+    const staffMembers = await db.users().find({ role: { $in: ["ADMIN", "BARBER"] } }).toArray();
+    for (const staff of staffMembers) {
+      await notify(
+        staff.id,
+        "⚠️ Marcação Desmarcada pelo Cliente",
+        `${appt.client_name || "Cliente"} (${appt.client_phone || "Sem tel"}) desmarcou o corte de ${appt.date} às ${appt.start_time}. A vaga foi libertada!`,
+        "CANCELLATION",
+        `/dashboard?tab=agenda&date=${appt.date}`
+      );
+    }
+
+    await offerNextWaitlistEntry(appt.date, appt.start_time);
+
+    res.json({ ok: true, message: "Marcação desmarcada com sucesso. A vaga foi libertada!" });
+  } catch (error) {
+    console.error("Erro ao cancelar marcação de bairro:", error);
+    res.status(500).json({ error: "Erro ao desmarcar." });
+  }
+});
+
+app.get("/api/bairro/radar", async (_req, res) => {
+  try {
+    const settings = await getSettings();
+    const days = [];
+    const now = new Date();
+    const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(now.getTime() + i * 86400000);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dayNum = String(d.getDate()).padStart(2, "0");
+      const iso = `${y}-${m}-${dayNum}`;
+      const sched = getDaySchedule(iso);
+
+      let freeCount = 0;
+      let hasFlash = false;
+
+      if (!sched.closed) {
+        const openMin = timeToMinutes(sched.open);
+        const closeMin = timeToMinutes(sched.close);
+        const lunchStart = timeToMinutes(settings.lunchStart);
+        const lunchEnd = timeToMinutes(settings.lunchEnd);
+
+        const appts = await db.appointments().find({ date: iso, status: "SCHEDULED" }).toArray();
+        const blocked = await db.blocked_times().find({ date: iso }).toArray();
+
+        let totalPossible = 0;
+        for (let mins = openMin; mins + 50 <= closeMin; mins += 60) {
+          const end = mins + 50;
+          if (closeMin > lunchEnd && overlaps(mins, end, lunchStart, lunchEnd)) continue;
+          totalPossible++;
+          const timeStr = minutesToTime(mins);
+          if (new Date(`${iso}T${timeStr}:00`).getTime() < Date.now()) continue;
+
+          const busy =
+            appts.some((a) => overlaps(mins, end, timeToMinutes(a.start_time), timeToMinutes(a.end_time))) ||
+            blocked.some((b) => overlaps(mins, end, timeToMinutes(b.start_time), timeToMinutes(b.end_time)));
+          if (!busy) freeCount++;
+        }
+
+        // Vaga Flash só faz sentido quando o dia está concorrido (poucas vagas) OU houve cancelamento nas últimas 2 horas
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const recentCancelled = await db.appointments().findOne({
+          date: iso,
+          status: "CANCELLED",
+          created_at: { $gte: twoHoursAgo }
+        });
+        
+        // Só é Vaga Flash se tiver poucas vagas restantes (ex: <= 3 vagas) ou vaga de última hora
+        if (recentCancelled && freeCount > 0 && freeCount <= Math.max(3, Math.floor(totalPossible * 0.4))) {
+          hasFlash = true;
+        }
+      }
+
+      days.push({
+        iso,
+        label: i === 0 ? "Hoje" : i === 1 ? "Amanhã" : dayLabels[d.getDay()],
+        dateFormatted: `${dayNum}/${m}`,
+        closed: sched.closed,
+        hours: sched.closed ? "Encerrado" : `${sched.open} - ${sched.close}`,
+        freeCount,
+        hasFlash,
+      });
+    }
+
+    res.json({ days });
+  } catch (e) {
+    res.json({ days: [] });
+  }
+});
+
+app.get("/api/bairro/loyalty", async (req, res) => {
+  try {
+    const phone = String(req.query.phone || "").trim();
+    if (!phone) {
+      return res.json({ visits: 0, currentCycleCuts: 0, cutsNeeded: 5, hasRewardReady: false });
+    }
+    const cleanPhone = phone.replace(/\D/g, "");
+    const user = await db.users().findOne({
+      $or: [
+        { phone },
+        { phone: { $regex: cleanPhone } },
+        { email: `bairro_${cleanPhone}@bairro.viegasbarber.pt` },
+      ],
+    });
+
+    if (!user) {
+      return res.json({ visits: 0, currentCycleCuts: 0, cutsNeeded: 5, hasRewardReady: false });
+    }
+
+    const loyalty = await db.loyalty().findOne({ user_id: user.id });
+    const visits = loyalty?.visits || 0;
+    const currentCycleCuts = visits % 5;
+    const hasRewardReady = visits > 0 && currentCycleCuts === 0;
+    const cutsNeeded = hasRewardReady ? 0 : 5 - currentCycleCuts;
+
+    res.json({
+      userName: user.name,
+      visits,
+      points: loyalty?.points || 0,
+      currentCycleCuts,
+      cutsNeeded,
+      hasRewardReady,
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Erro ao consultar fidelização." });
+  }
+});
+
+app.post("/api/bairro/reviews", async (req, res) => {
+  try {
+    const { name, phone, rating, comment } = req.body || {};
+    if (!name || name.trim().length < 2) {
+      return res.status(400).json({ error: "Por favor indica o teu nome." });
+    }
+    if (!phone || phone.replace(/\D/g, "").length < 9) {
+      return res.status(400).json({ error: "Por favor indica o teu telemóvel para verificar a tua marcação." });
+    }
+    if (!comment || comment.trim().length < 4) {
+      return res.status(400).json({ error: "Por favor escreve um comentário breve sobre o corte." });
+    }
+
+    const cleanPhone = phone.replace(/\D/g, "");
+    const matchingUsers = await db.users().find({
+      $or: [
+        { phone },
+        { phone: { $regex: cleanPhone } },
+        { email: `bairro_${cleanPhone}@bairro.viegasbarber.pt` },
+      ],
+    }).toArray();
+    const userIds = matchingUsers.map((u) => u.id);
+
+    // Procurar marcações (SCHEDULED ou COMPLETED) deste cliente
+    const appts = await db.appointments().find({
+      $or: [
+        { client_phone: phone },
+        { client_phone: { $regex: cleanPhone } },
+        { user_id: { $in: userIds } },
+      ],
+      status: { $in: ["SCHEDULED", "COMPLETED"] },
+    }).toArray();
+
+    if (!appts || appts.length === 0) {
+      return res.status(403).json({
+        error: "Apenas clientes com corte marcado podem deixar avaliação. Não encontramos marcações para este número."
+      });
+    }
+
+    // Verificar se pelo menos uma marcação já passou há pelo menos 1 hora
+    const now = Date.now();
+    const eligibleAppt = appts.find((a) => {
+      const apptDateTime = new Date(`${a.date}T${a.start_time}:00`).getTime();
+      const oneHourAfter = apptDateTime + (60 * 60 * 1000);
+      return now >= oneHourAfter;
+    });
+
+    if (!eligibleAppt) {
+      return res.status(403).json({
+        error: "A avaliação só fica disponível 1 hora depois da hora do teu corte marcado!"
+      });
+    }
+
+    const numRating = Math.min(5, Math.max(1, Number(rating) || 5));
+    const userId = matchingUsers[0]?.id || null;
+
+    await db.reviews().insertOne({
+      id: id(),
+      user_id: userId,
+      appointment_id: eligibleAppt.id,
+      reviewer_name: name.trim(),
+      reviewer_phone: phone,
+      rating: numRating,
+      comment: (comment || "").trim(),
+      is_private: false,
+      created_at: new Date().toISOString(),
+    });
+
+    res.json({ ok: true, message: "Obrigado pela tua avaliação!" });
+  } catch (e) {
+    console.error("Erro na avaliação:", e);
+    res.status(500).json({ error: "Erro ao registar avaliação." });
+  }
+});
+
+app.get("/api/bairro/reviews", async (_req, res) => {
+  try {
+    const list = await db.reviews().find({}).sort({ created_at: -1 }).limit(8).toArray();
+    const result = [];
+    for (const r of list) {
+      let uName = r.reviewer_name;
+      if (!uName && r.user_id) {
+        const u = await db.users().findOne({ id: r.user_id });
+        uName = u?.name;
+      }
+      result.push({
+        name: uName || "Cliente",
+        rating: r.rating || 5,
+        comment: r.comment || "Excelente corte e atendimento do Diogo Viegas!",
+        date: r.created_at ? new Date(r.created_at).toLocaleDateString("pt-PT") : "Recentemente",
+      });
+    }
+    res.json(result);
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+// -------------------------------------------------------------
 // HTML5 Single-Page / Clean Page Routes
 // -------------------------------------------------------------
 
 const htmlPages = [
   "/",
   "/index.html",
+  "/bairro.html",
   "/diogo.html",
   "/galeria.html",
   "/loja.html",
@@ -1567,6 +2275,14 @@ app.get("/sw.js", (_req, res) => {
   res.sendFile(path.join(www, "sw.js"));
 });
 
+app.get("/", (req, res, next) => {
+  const user = currentUser(req);
+  if (user && isStaff(user) && req.query.view !== "public") {
+    return res.redirect("/dashboard");
+  }
+  next();
+});
+
 htmlPages.forEach((route) => {
   app.get(route === "/" ? "/" : route.replace(".html", ""), (_req, res) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -1574,6 +2290,8 @@ htmlPages.forEach((route) => {
     res.sendFile(path.join(www, file.endsWith(".html") ? file : `${file}.html`));
   });
 });
+
+app.get("/rapido", (_req, res) => res.redirect("/bairro"));
 
 const port = Number(process.env.PORT || 3000);
 

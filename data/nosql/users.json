@@ -4,53 +4,150 @@
     "id": "ba5d4352-bbfc-4c09-92a9-9ed1bfe5bbb9",
     "name": "Diogo Viegas",
     "email": "admin@instagram.user",
-    "password": "$2b$12$/doLSMsIGMhBTszRXEXZIei9YBSXJdj25fO7sLoU3myjqivt0AGUm",
+    "password": "$2b$12$wjmN/4usOxbDoMaWQXw2iO0rSMn9L0SYf7KiNLM5VekKwWw9zJyvK",
     "role": "ADMIN",
     "created_at": "2026-10-09T15:54:07.760Z",
     "updated_at": "2026-10-09T15:54:07.760Z"
   },
   {
-    "_id": "3d5119e7-b117-43a6-9b61-397819e1fee4",
-    "id": "3d5119e7-b117-43a6-9b61-397819e1fee4",
-    "name": "Cliente Teste",
-    "email": "cliente1791561470956@teste.com",
-    "password": "$2b$12$W/anz.jXiTV9s2Zjwl9hse2q3P1Nfi3fFAi2rHl2k7KuiWWLA.ADm",
+    "_id": "901f1004-0602-4399-ad6d-40bb675c1437",
+    "id": "901f1004-0602-4399-ad6d-40bb675c1437",
+    "name": "Joabe",
+    "phone": "+351939504261",
+    "instagram": null,
+    "email": "bairro_351939504261@bairro.viegasbarber.pt",
     "role": "CLIENT",
-    "has_subscription": false,
-    "created_at": "2026-10-09T15:57:51.571Z",
-    "updated_at": "2026-10-09T15:57:51.577Z"
+    "created_at": "2026-10-13T11:08:26.900Z",
+    "updated_at": "2026-10-13T11:08:26.900Z"
   },
   {
-    "_id": "6a67e810-321b-42c1-a4b7-185ff18901e1",
-    "id": "6a67e810-321b-42c1-a4b7-185ff18901e1",
-    "name": "Diogo Cliente",
-    "email": "test1791561486282@cliente.pt",
-    "password": "$2b$12$mx552uyKCHM5OpW9EZshk.us/WJ8Uc3STVgnS4sfQAZDI1eN6XMBW",
+    "_id": "93bc47a6-02a0-45dc-8043-b36523ccdbee",
+    "id": "93bc47a6-02a0-45dc-8043-b36523ccdbee",
+    "name": "Serrado",
+    "phone": "964250761",
+    "instagram": null,
+    "email": "bairro_964250761@bairro.viegasbarber.pt",
     "role": "CLIENT",
-    "has_subscription": false,
-    "created_at": "2026-10-09T15:58:06.812Z",
-    "updated_at": "2026-10-09T15:58:06.812Z"
+    "created_at": "2026-10-13T11:04:46.942Z",
+    "updated_at": "2026-10-13T11:04:46.942Z"
   },
   {
-    "_id": "1060ac07-05bb-49cd-b6f2-f3a00f9ae8dc",
-    "id": "1060ac07-05bb-49cd-b6f2-f3a00f9ae8dc",
-    "name": "cscscs",
-    "email": "scscs@instagram.user",
-    "password": "$2b$12$YQL5RPmSU.rCpZKW6m9uf.6sfyJZc1QCj0xQkwSP8iHsG.izc1PSO",
+    "_id": "6ace500e952b51ab5ce46584",
+    "id": "2675dadd-6c91-44e0-957f-27c7178044ce",
+    "name": "Eduardo Lima",
+    "phone": "+351962443354",
+    "instagram": "edfromgod_777",
+    "email": "bairro_351962443354@bairro.viegasbarber.pt",
     "role": "CLIENT",
-    "has_subscription": false,
-    "created_at": "2026-10-09T16:22:48.462Z",
-    "updated_at": "2026-10-09T16:22:48.464Z"
+    "created_at": "2026-10-13T15:36:46.449Z"
   },
   {
-    "_id": "73827997-ccc2-4d22-b6dc-22b1e8ca0f2e",
-    "id": "73827997-ccc2-4d22-b6dc-22b1e8ca0f2e",
-    "name": "dhdhfh",
-    "email": "dhdhdbd@instagram.user",
-    "password": "$2b$12$AfhDvJyuunEnYPAivuwz2e8Cx0d.TbZnJYvN4dfXvHr9U0W5rtGKO",
+    "_id": "6ace546f952b51ab5ce46587",
+    "id": "420a9446-7c4e-46aa-99b4-9f5c7ebf7a2f",
+    "name": "Naldas",
+    "phone": "926106008",
+    "instagram": null,
+    "email": "bairro_926106008@bairro.viegasbarber.pt",
     "role": "CLIENT",
-    "has_subscription": false,
-    "created_at": "2026-10-09T22:37:59.883Z",
-    "updated_at": "2026-10-09T22:37:59.883Z"
+    "created_at": "2026-10-13T15:55:27.162Z"
+  },
+  {
+    "_id": "6ace5482952b51ab5ce4658a",
+    "id": "bf31f974-e0c3-4ce9-8556-cc506413f2b7",
+    "name": "Hugo Cruz",
+    "phone": "935846438",
+    "instagram": null,
+    "email": "bairro_935846438@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T15:55:46.486Z"
+  },
+  {
+    "_id": "6ace707c9ec37743ba7ccdb5",
+    "id": "43949a85-d09c-4a03-83aa-f20e5a7c5f5e",
+    "name": "Thierry",
+    "phone": "+351938519386",
+    "instagram": null,
+    "email": "bairro_351938519386@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T17:55:08.936Z"
+  },
+  {
+    "_id": "6ace760159cb6cc0b551d279",
+    "id": "usr_miguel_pereira_1791915521559",
+    "name": "Miguel Pereira",
+    "phone": "939109234",
+    "email": "bairro_939109234@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T18:18:41.559Z"
+  },
+  {
+    "_id": "6ace904a8045e03bf915e014",
+    "id": "c6af966c-2c69-401b-8883-9e233ea4783b",
+    "name": "Jo",
+    "phone": "933848893",
+    "instagram": "@J.silvaaz29",
+    "email": "bairro_933848893@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T20:10:50.623Z"
+  },
+  {
+    "_id": "6ace959e8045e03bf915e017",
+    "id": "cfaa44f8-d0d1-4213-9c9d-c0e79750b321",
+    "name": "Davi araujo",
+    "phone": "+351934892425",
+    "instagram": "Araujo4reall_",
+    "email": "bairro_351934892425@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T20:33:34.903Z"
+  },
+  {
+    "_id": "6ace9e16680d25cd50808405",
+    "id": "dafa067e-d261-4689-8c7d-25b2c25c1f75",
+    "name": "Gabriel Paulino",
+    "phone": "939 054 964",
+    "instagram": null,
+    "email": "bairro_939054964@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T21:09:42.982Z"
+  },
+  {
+    "_id": "6acea039680d25cd50808408",
+    "id": "82d65c47-d2b0-46ea-9c26-52c168641014",
+    "name": "Filipe silva",
+    "phone": "931678853",
+    "instagram": null,
+    "email": "bairro_931678853@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T21:18:49.666Z"
+  },
+  {
+    "_id": "6acea30d680d25cd5080840b",
+    "id": "c1c18755-7bf5-4fc5-aa16-f39be9acc404",
+    "name": "Diogo Nunes",
+    "phone": "969049888",
+    "instagram": null,
+    "email": "bairro_969049888@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T21:30:53.064Z"
+  },
+  {
+    "_id": "6acea916b915317da9d2f4df",
+    "id": "3b6e09f9-8f88-439d-97b9-7162e3923165",
+    "name": "Pedro souza",
+    "phone": "933739246",
+    "instagram": null,
+    "email": "bairro_933739246@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T21:56:38.030Z"
+  },
+  {
+    "_id": "6acea950b915317da9d2f4e2",
+    "id": "e71c0953-862a-46c6-bae9-19934c1fea74",
+    "name": "Martim Felizardo",
+    "phone": "932531423",
+    "instagram": "Martim.wz",
+    "email": "bairro_932531423@bairro.viegasbarber.pt",
+    "role": "CLIENT",
+    "created_at": "2026-10-13T21:57:36.625Z"
   }
 ]
