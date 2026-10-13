@@ -1948,6 +1948,9 @@ app.get("/api/bairro/my-active", async (req, res) => {
     }
     if (apptIds) {
       const splitIds = apptIds.split(",").map((s) => s.trim()).filter(Boolean);
+      for (const singleId of splitIds) {
+        orConditions.push({ id: singleId });
+      }
       if (splitIds.length > 0) {
         orConditions.push({ id: { $in: splitIds } });
       }
